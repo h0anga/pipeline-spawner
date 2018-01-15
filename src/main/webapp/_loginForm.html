@@ -1,0 +1,53 @@
+<div>
+    <!-- User is not logged in, show a form to log in using the method loggedOut -->
+    <div class="form-group">
+        <div class="lift:LogInForm.loggedOut">
+            <form class="lift:LogInForm.logIn?form=post">
+                <table>
+                    <tr>
+                        <td><label for="textName">Username: </label></td>
+                        <td>
+                            <input type="text" id="textName" name="name" autofocus/>
+                        </td>
+                        <td>
+                            <span class="lift:Msg?id=name;errorClass=alert+alert-danger"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><label for="textPassword">Password: </label></td>
+                        <td>
+                            <input type="password" id="textPassword" name="password" class="form-control"/>
+                        </td>
+                        <td>
+                            <span class="lift:Msg?id=password;errorClass=alert+alert-danger"></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td align="right">
+                            <input type="submit" value="Log in" class="btn btn-primary"/>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+
+        <!-- User is logged in, show who she is and a way to log out using the method loggedIn -->
+        <div class="lift:LogInForm.loggedIn">
+            <form class="lift:LogInForm.logOut?form=post">
+                <table>
+                    <tr>
+                        <td>
+                            Connected as <span class="lift:LogInForm.getName" id="username"></span>.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="right">
+                            <input type="submit" id="btnLogOut" value="Log out" class="btn"/>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
