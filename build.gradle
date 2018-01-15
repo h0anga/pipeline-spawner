@@ -20,6 +20,7 @@ ext {
     liftVersion = '3.1.1'
     specs2Version = "1.14"
     seleniumVersion = "3.0.1"
+    prometheus_version = "0.1.0"
 }
 
 repositories {
@@ -89,7 +90,9 @@ dependencies {
             'org.mortbay.jetty:jetty-management:6.1.25',
             "ch.qos.logback:logback-classic:1.0.13",
             'io.fabric8:kubernetes-client:3.1.8',
-            'sky.sns.hermes:hermes-status-service:14'
+            'sky.sns.hermes:hermes-status-service:14',
+            "io.prometheus:simpleclient_hotspot:${prometheus_version}",
+            "io.prometheus:simpleclient_servlet:${prometheus_version}"
 
     testCompile "junit:junit:4.12",
             "org.scalatest:scalatest_$scalaVersion:3.0.1",
