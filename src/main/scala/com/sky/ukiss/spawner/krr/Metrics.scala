@@ -1,10 +1,10 @@
 package com.sky.ukiss.spawner.krr
 
-import com.sky.ukiss.spawner.ProdConfiguration
 import net.liftweb.http.rest.RestHelper
+import net.liftweb.json.JsonAST.JObject
 
 object Metrics extends RestHelper {
   serve {
-    case Get("metrics" :: Nil, _) => ProdConfiguration.statusService
+    case Get("metrics" :: Nil, _) => JObject()
   }
 }
