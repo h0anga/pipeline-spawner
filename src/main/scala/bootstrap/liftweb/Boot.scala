@@ -1,6 +1,6 @@
 package bootstrap.liftweb
 
-import com.sky.ukiss.spawner.jobs.ViewAll
+import com.sky.ukiss.spawner.jobs.{GitHook, ViewAll}
 import com.sky.ukiss.spawner.krr.{Metrics, Ready, Status}
 import net.liftweb.common._
 import net.liftweb.http.ContentSourceRestriction.{Self, UnsafeEval, UnsafeInline}
@@ -17,6 +17,7 @@ class Boot {
     LiftRules.statelessDispatch.append(Status)
     LiftRules.statelessDispatch.append(Metrics)
     LiftRules.statelessDispatch.append(Ready)
+    LiftRules.statelessDispatch.append(GitHook)
 
     // Build SiteMap
     def sitemap() = SiteMap(

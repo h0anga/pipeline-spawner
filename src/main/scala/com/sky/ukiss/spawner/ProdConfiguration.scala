@@ -1,5 +1,7 @@
 package com.sky.ukiss.spawner
 
+import com.sky.ukiss.spawner.jobs.HookToJob
+import io.fabric8.kubernetes.client.{DefaultKubernetesClient, KubernetesClient}
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.hotspot.DefaultExports
 import net.liftweb.util.SimpleInjector
@@ -12,4 +14,7 @@ object ProdConfiguration extends SimpleInjector {
     DefaultExports.initialize()
     CollectorRegistry.defaultRegistry
   }){}
+
+  val kubernetes = new Inject[KubernetesClient](() => new DefaultKubernetesClient()) {}
+  val hookToJob = new Inject[HookToJob](() => new HookToJob(kubernetes.vend)) {}
 }
