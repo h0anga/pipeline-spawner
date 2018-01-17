@@ -2,6 +2,7 @@ package com.sky.ukiss.spawner.jobs
 
 import io.fabric8.kubernetes.api.model._
 import io.fabric8.kubernetes.client.KubernetesClient
+import io.fabric8.kubernetes.client.handlers.JobHandler
 
 import scala.collection.JavaConverters._
 
@@ -40,6 +41,7 @@ class HookToJob(kubernetes: KubernetesClient) {
       "location" -> "local",
       "dev_team_responsible" -> "alberto.colombo"
     ).asJava)
+    meta.setName("pipeline-spawner-job")
     meta
   }
 
@@ -52,14 +54,17 @@ class HookToJob(kubernetes: KubernetesClient) {
   }
 
   def submit(hook: HookData): Unit = {
-    kubernetes.resource(
-      new Job(
-        "batch/v1",
-        "Job",
-        objectMeta,
-        jobSpec,
-        null
+    kubernetes
+      .resource(
+        new Job(
+          "batch/v1",
+          "Job",
+          objectMeta,
+          jobSpec,
+          null
+        )
       )
-    ).createOrReplace()
+      .inNamespace("mobile")
+      .createOrReplace()
   }
 }
