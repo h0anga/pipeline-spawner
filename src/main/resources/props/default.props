@@ -1,4 +1,2 @@
 # Properties in this file will be read when running in dev mode
-simba.user=simba-test
-simba.password=simba-test
-simba.url=http://localhost:30003
+namespace=mobile

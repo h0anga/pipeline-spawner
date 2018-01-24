@@ -1,7 +1,5 @@
 package com.sky.ukiss.spawner.jobs
 
-import java.net.URL
-
 case class HookData(
                      before: String,
                      after: String,

@@ -1,7 +1,8 @@
 package bootstrap.liftweb
 
-import com.sky.ukiss.spawner.jobs.{GitHook, ViewAll}
+import com.sky.ukiss.spawner.jobs.GitHook
 import com.sky.ukiss.spawner.krr.{Metrics, Ready, Status}
+import com.sky.ukiss.spawner.snippet.ViewAllJobs
 import net.liftweb.common._
 import net.liftweb.http.ContentSourceRestriction.{Self, UnsafeEval, UnsafeInline}
 import net.liftweb.http._
@@ -21,8 +22,8 @@ class Boot {
 
     // Build SiteMap
     def sitemap() = SiteMap(
-      Menu.i("Home") / "index" >> Hidden >> EarlyResponse(() => S.redirectTo(ViewAll.menu.loc.calcDefaultHref)),
-      ViewAll.menu
+      Menu.i("Home") / "index" >> Hidden >> EarlyResponse(() => S.redirectTo(ViewAllJobs.menu.loc.calcDefaultHref)),
+      ViewAllJobs.menu
     )
 
     LiftRules.setSiteMapFunc(sitemap)

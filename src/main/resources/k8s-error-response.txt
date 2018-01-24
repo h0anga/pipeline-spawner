@@ -1,0 +1,70 @@
+io.fabric8.kubernetes.client.KubernetesClientException: Failure executing: PUT at: https://192.168.99.100:8443/apis/batch/v1/namespaces/mobile/jobs/pipeline-spawner-job.
+
+Message: Job.batch "pipeline-spawner-job" is invalid: [
+    spec.selector: Required value,
+    spec.template.metadata.labels: Invalid value: map[string]string{
+        "location":"local",
+        "app_version":"0.0.1-dev",
+        "environment":"minikube",
+        "app_name":"pipeline-spawner",
+        "dev_team_responsible":"alberto.colombo"
+    }: `selector` does not match template `labels`,
+    spec.template.metadata.labels: Invalid value: map[string]string{
+        "app_version":"0.0.1-dev", "environment":"minikube", "app_name":"pipeline-spawner", "dev_team_responsible":"alberto.colombo", "location":"local"
+    }: `selector` does not match template `labels`,
+    spec.selector: Invalid value: "null": field is immutable,
+    spec.template: Invalid value: api.PodTemplateSpec{
+        ObjectMeta:v1.ObjectMeta{
+            Name:"pipeline-spawner-job", GenerateName:"", Namespace:"mobile", SelfLink:"", UID:"", ResourceVersion:"", Generation:0, CreationTimestamp:v1.Time{Time:time.Time{sec:0, nsec:0, loc:(*time.Location)(nil)}}, DeletionTimestamp:(*v1.Time)(nil), DeletionGracePeriodSeconds:(*int64)(nil), Labels:map[string]string{"environment":"minikube", "app_name":"pipeline-spawner", "dev_team_responsible":"alberto.colombo", "location":"local", "app_version":"0.0.1-dev"}, Annotations:map[string]string{}, OwnerReferences:[]v1.OwnerReference{}, Initializers:(*v1.Initializers)(nil), Finalizers:[]string{}, ClusterName:""
+        },
+        Spec:api.PodSpec{
+            Volumes:[]api.Volume{},
+            InitContainers:[]api.Container{},
+            Containers:[]api.Container{
+                api.Container{
+                    Name:"pipeline-spawner-job",
+                    Image:"repo.sns.sky.com:8186/dost/pipeline-build:0.1.8",
+                    Command:[]string{"bash", "-c", "git clone http://example.com/diaspora.git application && cd application && make build"},
+                    Args:[]string{},
+                    WorkingDir:"",
+                    Ports:[]api.ContainerPort{},
+                    EnvFrom:[]api.EnvFromSource{},
+                    Env:[]api.EnvVar{api.EnvVar{Name:"GIT_SSL_NO_VERIFY", Value:"1", ValueFrom:(*api.EnvVarSource)(nil)}},
+                    Resources:api.ResourceRequirements{Limits:api.ResourceList(nil),
+                    Requests:api.ResourceList(nil)},
+                    VolumeMounts:[]api.VolumeMount{},
+                    LivenessProbe:(*api.Probe)(nil),
+                    ReadinessProbe:(*api.Probe)(nil),
+                    Lifecycle:(*api.Lifecycle)(nil),
+                    TerminationMessagePath:"/dev/termination-log",
+                    TerminationMessagePolicy:"File",
+                    ImagePullPolicy:"IfNotPresent",
+                    SecurityContext:(*api.SecurityContext)(nil),
+                    Stdin:false,
+                    StdinOnce:false,
+                    TTY:false
+                }
+            },
+            RestartPolicy:"Never",
+            TerminationGracePeriodSeconds:(*int64)(0xc422080da0),
+            ActiveDeadlineSeconds:(*int64)(nil),
+            DNSPolicy:"ClusterFirst",
+            NodeSelector:map[string]string{},
+            ServiceAccountName:"",
+            AutomountServiceAccountToken:(*bool)(nil),
+            NodeName:"",
+            SecurityContext:(*api.PodSecurityContext)(0xc42a0569c0),
+            ImagePullSecrets:[]api.LocalObjectReference{},
+            Hostname:"",
+            Subdomain:"",
+            Affinity:(*api.Affinity)(nil),
+            SchedulerName:"default-scheduler",
+            Tolerations:[]api.Toleration{},
+            HostAliases:[]api.HostAlias{},
+            PriorityClassName:"",
+            Priority:(*int32)(nil)
+        }
+    }: field is immutable
+].
+
+ Received status: Status(apiVersion=v1, code=422, details=StatusDetails(causes=[StatusCause(field=spec.selector, message=Required value, reason=FieldValueRequired, additionalProperties={}), StatusCause(field=spec.template.metadata.labels, message=Invalid value: map[string]string{"app_name":"pipeline-spawner", "dev_team_responsible":"alberto.colombo", "location":"local", "app_version":"0.0.1-dev", "environment":"minikube"}: `selector` does not match template `labels`, reason=FieldValueInvalid, additionalProperties={}), StatusCause(field=spec.selector, message=Required value, reason=FieldValueRequired, additionalProperties={}), StatusCause(field=spec.template.metadata.labels, message=Invalid value: map[string]string{"dev_team_responsible":"alberto.colombo", "location":"local", "app_version":"0.0.1-dev", "environment":"minikube", "app_name":"pipeline-spawner"}: `selector` does not match template `labels`, reason=FieldValueInvalid, additionalProperties={}), StatusCause(field=spec.selector, message=Invalid value: "null": field is immutable, reason=FieldValueInvalid, additionalProperties={}), StatusCause(field=spec.template, message=Invalid value: api.PodTemplateSpec{ObjectMeta:v1.ObjectMeta{Name:"pipeline-spawner-job", GenerateName:"", Namespace:"mobile", SelfLink:"", UID:"", ResourceVersion:"", Generation:0, CreationTimestamp:v1.Time{Time:time.Time{sec:0, nsec:0, loc:(*time.Location)(nil)}}, DeletionTimestamp:(*v1.Time)(nil), DeletionGracePeriodSeconds:(*int64)(nil), Labels:map[string]string{"location":"local", "app_version":"0.0.1-dev", "environment":"minikube", "app_name":"pipeline-spawner", "dev_team_responsible":"alberto.colombo"}, Annotations:map[string]string{}, OwnerReferences:[]v1.OwnerReference{}, Initializers:(*v1.Initializers)(nil), Finalizers:[]string{}, ClusterName:""}, Spec:api.PodSpec{Volumes:[]api.Volume{}, InitContainers:[]api.Container{}, Containers:[]api.Container{api.Container{Name:"pipeline-spawner-job", Image:"repo.sns.sky.com:8186/dost/pipeline-build:0.1.8", Command:[]string{"bash", "-c", "git clone http://example.com/diaspora.git application && cd application && make build"}, Args:[]string{}, WorkingDir:"", Ports:[]api.ContainerPort{}, EnvFrom:[]api.EnvFromSource{}, Env:[]api.EnvVar{api.EnvVar{Name:"GIT_SSL_NO_VERIFY", Value:"1", ValueFrom:(*api.EnvVarSource)(nil)}}, Resources:api.ResourceRequirements{Limits:api.ResourceList(nil), Requests:api.ResourceList(nil)}, VolumeMounts:[]api.VolumeMount{}, LivenessProbe:(*api.Probe)(nil), ReadinessProbe:(*api.Probe)(nil), Lifecycle:(*api.Lifecycle)(nil), TerminationMessagePath:"/dev/termination-log", TerminationMessagePolicy:"File", ImagePullPolicy:"IfNotPresent", SecurityContext:(*api.SecurityContext)(nil), Stdin:false, StdinOnce:false, TTY:false}}, RestartPolicy:"Never", TerminationGracePeriodSeconds:(*int64)(0xc422080da0), ActiveDeadlineSeconds:(*int64)(nil), DNSPolicy:"ClusterFirst", NodeSelector:map[string]string{}, ServiceAccountName:"", AutomountServiceAccountToken:(*bool)(nil), NodeName:"", SecurityContext:(*api.PodSecurityContext)(0xc42a0569c0), ImagePullSecrets:[]api.LocalObjectReference{}, Hostname:"", Subdomain:"", Affinity:(*api.Affinity)(nil), SchedulerName:"default-scheduler", Tolerations:[]api.Toleration{}, HostAliases:[]api.HostAlias{}, PriorityClassName:"", Priority:(*int32)(nil)}}: field is immutable, reason=FieldValueInvalid, additionalProperties={})], group=batch, kind=Job, name=pipeline-spawner-job, retryAfterSeconds=null, uid=null, additionalProperties={}), kind=Status, message=Job.batch "pipeline-spawner-job" is invalid: [spec.selector: Required value, spec.template.metadata.labels: Invalid value: map[string]string{"location":"local", "app_version":"0.0.1-dev", "environment":"minikube", "app_name":"pipeline-spawner", "dev_team_responsible":"alberto.colombo"}: `selector` does not match template `labels`, spec.template.metadata.labels: Invalid value: map[string]string{"app_version":"0.0.1-dev", "environment":"minikube", "app_name":"pipeline-spawner", "dev_team_responsible":"alberto.colombo", "location":"local"}: `selector` does not match template `labels`, spec.selector: Invalid value: "null": field is immutable, spec.template: Invalid value: api.PodTemplateSpec{ObjectMeta:v1.ObjectMeta{Name:"pipeline-spawner-job", GenerateName:"", Namespace:"mobile", SelfLink:"", UID:"", ResourceVersion:"", Generation:0, CreationTimestamp:v1.Time{Time:time.Time{sec:0, nsec:0, loc:(*time.Location)(nil)}}, DeletionTimestamp:(*v1.Time)(nil), DeletionGracePeriodSeconds:(*int64)(nil), Labels:map[string]string{"environment":"minikube", "app_name":"pipeline-spawner", "dev_team_responsible":"alberto.colombo", "location":"local", "app_version":"0.0.1-dev"}, Annotations:map[string]string{}, OwnerReferences:[]v1.OwnerReference{}, Initializers:(*v1.Initializers)(nil), Finalizers:[]string{}, ClusterName:""}, Spec:api.PodSpec{Volumes:[]api.Volume{}, InitContainers:[]api.Container{}, Containers:[]api.Container{api.Container{Name:"pipeline-spawner-job", Image:"repo.sns.sky.com:8186/dost/pipeline-build:0.1.8", Command:[]string{"bash", "-c", "git clone http://example.com/diaspora.git application && cd application && make build"}, Args:[]string{}, WorkingDir:"", Ports:[]api.ContainerPort{}, EnvFrom:[]api.EnvFromSource{}, Env:[]api.EnvVar{api.EnvVar{Name:"GIT_SSL_NO_VERIFY", Value:"1", ValueFrom:(*api.EnvVarSource)(nil)}}, Resources:api.ResourceRequirements{Limits:api.ResourceList(nil), Requests:api.ResourceList(nil)}, VolumeMounts:[]api.VolumeMount{}, LivenessProbe:(*api.Probe)(nil), ReadinessProbe:(*api.Probe)(nil), Lifecycle:(*api.Lifecycle)(nil), TerminationMessagePath:"/dev/termination-log", TerminationMessagePolicy:"File", ImagePullPolicy:"IfNotPresent", SecurityContext:(*api.SecurityContext)(nil), Stdin:false, StdinOnce:false, TTY:false}}, RestartPolicy:"Never", TerminationGracePeriodSeconds:(*int64)(0xc422080da0), ActiveDeadlineSeconds:(*int64)(nil), DNSPolicy:"ClusterFirst", NodeSelector:map[string]string{}, ServiceAccountName:"", AutomountServiceAccountToken:(*bool)(nil), NodeName:"", SecurityContext:(*api.PodSecurityContext)(0xc42a0569c0), ImagePullSecrets:[]api.LocalObjectReference{}, Hostname:"", Subdomain:"", Affinity:(*api.Affinity)(nil), SchedulerName:"default-scheduler", Tolerations:[]api.Toleration{}, HostAliases:[]api.HostAlias{}, PriorityClassName:"", Priority:(*int32)(nil)}}: field is immutable], metadata=ListMeta(resourceVersion=null, selfLink=null, additionalProperties={}), reason=Invalid, status=Failure, additionalProperties={}).

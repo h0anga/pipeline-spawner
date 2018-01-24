@@ -1,5 +1,7 @@
 package com.sky.ukiss.spawner.jobs
 
+import java.util.UUID
+
 import io.fabric8.kubernetes.api.model._
 import io.fabric8.kubernetes.client.KubernetesClient
 import io.fabric8.kubernetes.client.handlers.JobHandler
@@ -11,12 +13,12 @@ class HookToJob(kubernetes: KubernetesClient) {
   private val buildImageVersion = "0.1.8"
   private val buildImage = s"repo.sns.sky.com:8186/dost/pipeline-build:$buildImageVersion"
 
-  private val container = {
+  private def container(hook: HookData) = {
     val buildContainer = new Container()
     buildContainer.setImage(buildImage)
     buildContainer.setCommand(List(
       "bash", "-c",
-      "git clone https://git.sns.sky.com/alberto.colombo/aggro-cli.git application && cd application && make"
+      s"git clone ${hook.repository.homepage}.git application && cd application && make build"
     ).asJava)
     buildContainer.setName("pipeline-spawner-job")
     buildContainer.setEnv(List(
@@ -25,14 +27,14 @@ class HookToJob(kubernetes: KubernetesClient) {
     buildContainer
   }
 
-  private val podSpec = {
+  private def podSpec(hook: HookData) = {
     val spec = new PodSpec()
-    spec.setContainers(List(container).asJava)
+    spec.setContainers(List(container(hook)).asJava)
     spec.setRestartPolicy("Never")
     spec
   }
 
-  private val objectMeta = {
+  private def objectMeta(hook: HookData)(implicit id : String) = {
     val meta = new ObjectMeta()
     meta.setLabels(Map(
       "app_name" -> "pipeline-spawner",
@@ -41,26 +43,28 @@ class HookToJob(kubernetes: KubernetesClient) {
       "location" -> "local",
       "dev_team_responsible" -> "alberto.colombo"
     ).asJava)
-    meta.setName("pipeline-spawner-job")
+    meta.setName(s"pipeline-spawner-job-$id")
     meta
   }
 
-  private val jobSpec = {
+  private def jobSpec(hook: HookData)(implicit id : String) = {
     val spec = new JobSpec()
-    spec.setTemplate(new PodTemplateSpec(objectMeta, podSpec))
+    spec.setTemplate(new PodTemplateSpec(objectMeta(hook), podSpec(hook)))
     spec.setParallelism(1)
     spec.setCompletions(1)
+    spec.setSelector(new LabelSelector())
     spec
   }
 
   def submit(hook: HookData): Unit = {
+    implicit val id = UUID.randomUUID().toString
     kubernetes
       .resource(
         new Job(
           "batch/v1",
           "Job",
-          objectMeta,
-          jobSpec,
+          objectMeta(hook),
+          jobSpec(hook),
           null
         )
       )
