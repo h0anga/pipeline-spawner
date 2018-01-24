@@ -7,7 +7,7 @@ plugins {
 
 task dist(type: Jar) {
     manifest {
-        attributes 'Main-Class': 'uk.sky.tech.rafiki.Main'
+        attributes 'Main-Class': 'com.sky.ukiss.spawner.Main'
     }
     baseName = project.name + '-all'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
