@@ -5,6 +5,7 @@ import io.fabric8.kubernetes.api.model.Job
 import io.fabric8.kubernetes.client.Watcher.Action.ADDED
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
 import net.liftweb.common.Func
+import net.liftweb.http.S
 import net.liftweb.util.ValueCell
 
 import scala.collection.JavaConverters._
@@ -37,6 +38,10 @@ object JobEvents {
         case _ =>
           println("TODO do something else")
       }
+
+      S.session.foreach(_.sendCometMessage(JobChanged))
     }
   })
 }
+
+object JobChanged
