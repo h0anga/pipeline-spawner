@@ -17,5 +17,5 @@ object ProdConfiguration extends SimpleInjector {
   val kubernetes = new Inject[KubernetesClient](() => new DefaultKubernetesClient()) {}
   val hookToJob = new Inject[HookToJob](() => new HookToJob(kubernetes.vend)) {}
   val defaultNamespace = Props.props("namespace")
-  val jobEvents = new Inject[JobEvents](() => new JobEvents(kubernetes.vend, defaultNamespace)) {}
+//  val jobEvents = new Inject[JobEvents](() => new JobEvents(kubernetes.vend, defaultNamespace)) {}
 }

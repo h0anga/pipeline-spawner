@@ -11,7 +11,7 @@ import scala.collection.JavaConverters._
 class HookToJob(kubernetes: KubernetesClient) {
 
   private val buildImageVersion = "0.1.8"
-  private val buildImage = s"repo.sns.sky.com:8186/dost/pipeline-build:$buildImageVersion"
+  private val buildImage = s"repo.sns.sky.com:8185/dost/pipeline-build:$buildImageVersion"
 
   private def container(hook: HookData) = {
     val buildContainer = new Container()
@@ -41,7 +41,8 @@ class HookToJob(kubernetes: KubernetesClient) {
       "app_version" -> "0.0.1-dev",
       "environment" -> "minikube",
       "location" -> "local",
-      "dev_team_responsible" -> "alberto.colombo"
+      "dev_team_responsible" -> "alberto.colombo",
+      "created_by" -> "pipeline-spawner"
     ).asJava)
     meta.setName(s"pipeline-spawner-job-$id")
     meta
