@@ -4,12 +4,10 @@ import com.sky.ukiss.spawner.ProdConfiguration
 import io.fabric8.kubernetes.api.model.Job
 import io.fabric8.kubernetes.client.Watcher.Action.ADDED
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
-import net.liftweb.common.Func
 import net.liftweb.http.S
 import net.liftweb.util.ValueCell
 
 import scala.collection.JavaConverters._
-import scala.collection.parallel.mutable
 
 object JobEvents {
   private val client: KubernetesClient = ProdConfiguration.kubernetes.vend
@@ -29,19 +27,17 @@ object JobEvents {
     override def eventReceived(action: Watcher.Action, job: Job): Unit = {
       val name = job.getMetadata.getName
       val labels = job.getMetadata.getLabels
-      println(s"${action.name()} job $name with labels $labels")
-
       action match {
         case ADDED =>
           Jobs += JobData(name, labels.get("app_name"))
-          println("Added the new job")
+          println("*** Added the new job")
+          S.session.foreach(_.sendCometMessage(JobsChanged))
         case _ =>
-          println("TODO do something else")
+          println("*** TODO do something else")
       }
 
-      S.session.foreach(_.sendCometMessage(JobChanged))
     }
   })
 }
 
-object JobChanged
+object JobsChanged
