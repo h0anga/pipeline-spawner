@@ -12,6 +12,7 @@ out
 :
 # logs
 derby.log
+log/
 
 # eclipse conf file
 .settings
