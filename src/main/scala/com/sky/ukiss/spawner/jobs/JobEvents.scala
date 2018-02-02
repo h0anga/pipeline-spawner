@@ -4,21 +4,25 @@ import com.sky.ukiss.spawner.ProdConfiguration
 import io.fabric8.kubernetes.api.model.Job
 import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
-import net.liftweb.http.SessionMaster
+import net.liftweb.actor.LiftActor
+import net.liftweb.common.{Box, Empty, Full}
+import net.liftweb.http.{LiftSession, SessionInfo, SessionMaster, SessionWatcherInfo}
 import net.liftweb.util.ValueCell
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-object JobEvents {
-  private val logger = LoggerFactory.getLogger(this.getClass)
+object JobEvents extends LiftActor{
+  private var sessions: Box[Map[String, SessionInfo]] = Empty
 
+  private val logger = LoggerFactory.getLogger(this.getClass)
   private val client: KubernetesClient = ProdConfiguration.kubernetes.vend
   private val namespace: String = ProdConfiguration.defaultNamespace
 
-//  val jobs = ValueCell(Jobs)  //mutable.ParSet[JobData]()
-  val jobsCell: ValueCell[mutable.Set[JobData]] = ValueCell(mutable.Set())  //mutable.ParSet[JobData]()
+  SessionMaster.sessionWatchers = SessionMaster.sessionWatchers ++ List(this)
+
+  val jobsCell: ValueCell[mutable.Set[JobData]] = ValueCell(mutable.Set())
 
   def jobs = jobsCell.currentValue._1
 
@@ -42,9 +46,16 @@ object JobEvents {
         case ERROR => logger.error("error about job events", job)
       }
       println("*** Jobs changed")
-      SessionMaster ! JobsChanged
+
+      sessions.foreach(_.values.foreach(_.session.sendCometMessage(JobsChanged)))
     }
   })
+
+  override protected def messageHandler: PartialFunction[Any, Unit] = {
+    case SessionWatcherInfo(s) =>
+      printf(s"*** sessions changed: $s")
+      sessions = Full(s)
+  }
 }
 
 object JobsChanged
