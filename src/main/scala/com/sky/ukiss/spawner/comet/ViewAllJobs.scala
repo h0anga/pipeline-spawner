@@ -10,7 +10,7 @@ object ViewAllJobs {
 
 class ViewAllJobs extends CometActor {
   def render = "#jobs-list" #>
-    WiringUI(JobEvents.jobs) { jobs =>
+    WiringUI(JobEvents.jobsCell) { jobs =>
       "tbody" #>
         jobs.toSeq.sortBy(_.name).map(job => "tr" #> (
           ".job-name *" #> job.name &
@@ -24,5 +24,7 @@ class ViewAllJobs extends CometActor {
       unregisterFromAllDependencies()
       theSession.clearPostPageJavaScriptForThisPage()
       reRender(true)
+    case x =>
+      println(s"*** something else happened: $x")
   }
 }
