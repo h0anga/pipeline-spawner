@@ -3,6 +3,7 @@ package com.sky.ukiss.spawner.frontend.routing
 import com.sky.ukiss.spawner.frontend.ApplicationContext
 import com.sky.ukiss.spawner.frontend.views.RootViewFactory
 import com.sky.ukiss.spawner.frontend.views.chat.ChatViewFactory
+import com.sky.ukiss.spawner.frontend.views.jobs.JobsViewFactory
 import com.sky.ukiss.spawner.frontend.views.login.LoginPageViewFactory
 import io.udash._
 
@@ -18,5 +19,9 @@ class StatesToViewFactoryDef extends ViewFactoryRegistry[RoutingState] {
       case ChatState => new ChatViewFactory(
         ApplicationContext.userService, ApplicationContext.translationsService, ApplicationContext.notificationsCenter
       )
+      case ViewAllJobsState => new JobsViewFactory(
+        ApplicationContext.userService, ApplicationContext.notificationsCenter
+      )
+      case ViewJobDetailsState(jobId) => ??? // TODO make job details page
     }
 }
