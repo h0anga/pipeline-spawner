@@ -11,9 +11,11 @@ class GitHookServiceComponent(kube: KubernetesService) extends Http4sDsl[IO] {
   private implicit val payloadDecoder = jsonOf[IO, GitHookPayload]
 
   lazy val service = HttpService[IO] {
-      case req @ POST -> Root / "hook" => for {
+      case req @ POST -> Root / "hook" =>
+        for {
           payload <- req.as[GitHookPayload]
           submission <- kube.onGitHook(payload)
-        } yield Ok(s"We extracted the payload and it looks like this: $payload, and the result of the submission is $submission")
+          response <- Ok(s"We extracted the payload and it looks like this: $payload, and the result of the submission is $submission")
+        } yield response
     }
 }

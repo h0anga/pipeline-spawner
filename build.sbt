@@ -15,7 +15,9 @@ lazy val root = (project in file("."))
       "org.http4s"      %%  "http4s-dsl"          % Http4sVersion,
       "io.circe"        %%  "circe-generic"       % CirceVersion,
       "io.circe"        %%  "circe-literal"       % CirceVersion,
+      "org.log4s"       %%  "log4s"               % "1.4.0",
       "org.specs2"      %%  "specs2-core"         % Specs2Version % "test",
+      "com.eed3si9n"    %%  "gigahorse-github"    % "gigahorse0.3.1_0.2.0",
       "ch.qos.logback"  %   "logback-classic"     % LogbackVersion,
       "io.fabric8"      %   "kubernetes-client"   % "3.1.8"
     )

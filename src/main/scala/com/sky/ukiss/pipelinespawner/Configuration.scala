@@ -1,0 +1,17 @@
+package com.sky.ukiss.pipelinespawner
+
+import java.util.UUID
+
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
+
+import scala.util.Random
+
+class Configuration {
+  lazy val kubernetesService = new KubernetesService(kubernetesClient, namespace, gitHookPayloadToJobConverter)
+  lazy val kubernetesClient = new DefaultKubernetesClient()
+  lazy val namespace = "mobile" // TODO read from config file?
+  lazy val gitHookPayloadToJobConverter = new ConvertGitHookToJob(generateRandomId)
+  lazy val generateRandomId = () => Random.alphanumeric.take(6).mkString
+  lazy val gitHookServiceComponent = new GitHookServiceComponent(kubernetesService)
+
+}

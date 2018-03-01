@@ -1,15 +1,17 @@
 package com.sky.ukiss.pipelinespawner
 
+import java.io.{BufferedReader, InputStreamReader}
+
 import cats.effect.IO
-import gigahorse.InMemoryBody
 import org.http4s._
-import org.http4s.implicits._
 import org.specs2.matcher.MatchResult
 
-class HelloWorldSpec extends org.specs2.mutable.Specification {
-  val hookJson = """
-    """
+import scala.io.Source
 
+class HelloWorldSpec extends org.specs2.mutable.Specification {
+  val hookJson: String = Source.fromResource("/git-hook.json").mkString
+
+  lazy val gitHookEndpoint = new Configuration().gitHookServiceComponent.service
 
   "HelloWorld" >> {
     "return 200" >> {
@@ -20,9 +22,14 @@ class HelloWorldSpec extends org.specs2.mutable.Specification {
     }
   }
 
+  import fs2.Stream
+  import cats.effect.IO._
+
   "Git Hook" >> {
     "return 200" >> {
-      val post = Request[IO](Method.POST, Uri.uri("/hook"), body = InMemoryBody())
+      val post = Request(Method.POST, Uri.uri("/hook")).withBody(hookJson).unsafeRunSync()
+      val task = gitHookEndpoint.run(post)
+      val response = ??? // TODO get the response
     }
 
     "return the id of the job spawned" >> {
@@ -31,8 +38,10 @@ class HelloWorldSpec extends org.specs2.mutable.Specification {
   }
 
   private[this] val retHelloWorld: Response[IO] = {
-    val getHW = Request[IO](Method.GET, Uri.uri("/hello/world"))
-    HelloWorldServer.helloService.orNotFound(getHW).unsafeRunSync()
+    val request = Request[IO](Method.GET, Uri.uri("/hello/world"))
+    val responseTask = HelloWorldServer.helloService.run(request)
+    val response: Option[_] = responseTask.run.body.runLast.run
+    response.get.decodeUtf8.right.get shouldEqual """{"message":hello, world"}"""
   }
 
   private[this] def uriReturns200(): MatchResult[Status] =
