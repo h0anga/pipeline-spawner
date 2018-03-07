@@ -11,12 +11,15 @@ import scala.io.Source
 class HelloWorldSpec extends org.specs2.mutable.Specification {
   val hookJson: String = Source.fromResource("/git-hook.json").mkString
 
-  lazy val gitHookEndpoint = new Configuration().gitHookServiceComponent.service
+  def gitHookEndpoint = new Configuration().gitHookServiceComponent.service
 
   "HelloWorld" >> {
     "return 200" >> {
-      uriReturns200()
+      val request = Request[IO](Method.GET, Uri.uri("/hello/world"))
+      val response = HelloWorldServer.helloService(request)
+      response === """{"message":hello, world"}"""
     }
+
     "return hello world" >> {
       uriReturnsHelloWorld()
     }
@@ -37,12 +40,12 @@ class HelloWorldSpec extends org.specs2.mutable.Specification {
     }
   }
 
-  private[this] val retHelloWorld: Response[IO] = {
-    val request = Request[IO](Method.GET, Uri.uri("/hello/world"))
-    val responseTask = HelloWorldServer.helloService.run(request)
-    val response: Option[_] = responseTask.run.body.runLast.run
-    response.get.decodeUtf8.right.get shouldEqual """{"message":hello, world"}"""
-  }
+//  private[this] val retHelloWorld: Response[IO] = {
+//    val request = Request[IO](Method.GET, Uri.uri("/hello/world"))
+//    val responseTask = HelloWorldServer.helloService.run(request)
+//    val response: Option[_] = responseTask.run.body.runLast.run
+//    response.get.decodeUtf8.right.get shouldEqual """{"message":hello, world"}"""
+//  }
 
   private[this] def uriReturns200(): MatchResult[Status] =
     retHelloWorld.status must beEqualTo(Status.Ok)
