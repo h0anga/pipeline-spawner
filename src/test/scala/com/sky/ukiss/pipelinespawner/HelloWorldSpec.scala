@@ -2,15 +2,19 @@ package com.sky.ukiss.pipelinespawner
 
 import cats.effect.IO
 import org.http4s._
+import org.mockito.ArgumentMatchers.any
 import org.specs2.matcher.MatchResult
+import org.specs2.mock.Mockito
 import org.specs2.mutable._
 
 import scala.io.Source
 
-class HelloWorldSpec extends Specification {
+class HelloWorldSpec extends Specification with Mockito {
   lazy val hookJson: String = Source.fromResource("git-hook.json").mkString
+  lazy val prodConfig = new Configuration()
+  lazy val kubeService = mock[KubernetesService].verbose
 
-  def gitHookEndpoint = new Configuration().gitHookServiceComponent.service
+  def gitHookEndpoint = new GitHookServiceComponent(kubeService).service
 
   "HelloWorld" >> {
     "return 200" >> {
@@ -37,6 +41,8 @@ class HelloWorldSpec extends Specification {
   import cats.effect.IO._
 
   "Git Hook" >> {
+    kubeService.onGitHook(any[GitHookPayload]()) returns "the id of the job"
+
     "return 200" >> {
       retGitHook.status must_== Status.Ok
     }

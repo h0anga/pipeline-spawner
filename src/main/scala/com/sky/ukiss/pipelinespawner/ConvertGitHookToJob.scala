@@ -14,7 +14,7 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
   private val repo = "repo.sns.sky.com:8186"
   private val version = "0.1.5"
   private val buildImage = s"$repo/dost/pipeline-build:$version"
-  private val myName = "pipeline-spanwer"
+  private val myName = "pipeline-spawner"
 
   override def apply(hook: GitHookPayload): Job = {
     val metadata = new ObjectMeta()
@@ -24,18 +24,21 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
 
     val job = new Job()
     val spec = new JobSpec()
+    val podTemplateSpec = new PodTemplateSpec()
+    val podSpec = new PodSpec()
+    val container = new Container()
+
     job.setSpec(spec)
     job.setMetadata(metadata)
 
-    val podTemplateSpec = new PodTemplateSpec()
     spec.setTemplate(podTemplateSpec)
 
-    val podSpec = new PodSpec()
-    podTemplateSpec.setSpec(podSpec)
     podTemplateSpec.setMetadata(metadata)
+    podTemplateSpec.setSpec(podSpec)
 
-    val container = new Container()
+    podSpec.setRestartPolicy("Never")
     podSpec.setContainers(List(container).asJava)
+
     container.setImage(buildImage)
     container.setName("build")
 

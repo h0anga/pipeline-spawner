@@ -14,7 +14,7 @@ class GitHookServiceComponent(kube: KubernetesService) extends Http4sDsl[IO] {
       case req @ POST -> Root / "hook" =>
         for {
           payload <- req.as[GitHookPayload]
-          submission <- kube.onGitHook(payload)
+          submission <- IO { kube.onGitHook(payload) }
           response <- Ok(s"We extracted the payload and it looks like this: $payload, and the result of the submission is $submission")
         } yield response
     }
