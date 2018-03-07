@@ -1,8 +1,5 @@
 package com.sky.ukiss.pipelinespawner
 
-import java.util.Collections
-import java.util.Collections.singletonList
-
 import io.fabric8.kubernetes.api.model._
 import org.log4s
 

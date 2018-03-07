@@ -10,7 +10,7 @@ import org.http4s.server.blaze.BlazeBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object HelloWorldServer extends StreamApp[IO] with Http4sDsl[IO] {
+object Server extends StreamApp[IO] with Http4sDsl[IO] {
   val helloService = HttpService[IO] {
     case GET -> Root / "hello" / name =>
       Ok(Json.obj("message" -> Json.fromString(s"Hello, ${name}")))

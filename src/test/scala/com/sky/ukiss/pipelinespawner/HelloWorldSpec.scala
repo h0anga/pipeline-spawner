@@ -28,7 +28,7 @@ class HelloWorldSpec extends Specification with Mockito {
 
   private[this] val retHelloWorld: Response[IO] = {
     val request = Request[IO](Method.GET, Uri.uri("/hello/world"))
-    val response: Response[IO] = HelloWorldServer.helloService(request).getOrElse(???).unsafeRunSync()
+    val response: Response[IO] = Server.helloService(request).getOrElse(???).unsafeRunSync()
     response
   }
 
