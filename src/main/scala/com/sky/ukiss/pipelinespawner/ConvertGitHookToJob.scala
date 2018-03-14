@@ -39,10 +39,11 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
     container.setImage(buildImage)
     container.setName("build")
 
-    val cloneUrl = hook.repository.url + ".git"
+    val cloneUrl = hook.project.git_http_url
+    val commit = hook.after
     container.setCommand(List(
       "bash", "-c",
-      s"git clone $cloneUrl application && cd application/pipeline && make buildImage"
+      s"git clone $cloneUrl application && cd application/pipeline && git checkout $commit && make buildImage"
     ).asJava)
 
     log.info(s"Converted $hook into $job")
