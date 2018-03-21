@@ -11,7 +11,7 @@ import scala.io.Source
 
 class HelloWorldSpec extends Specification with Mockito {
   lazy val hookJson: String = Source.fromResource("git-hook.json").mkString
-  lazy val prodConfig = new Configuration()
+  lazy val prodConfig = new Context()
   lazy val kubeService = mock[KubernetesService].verbose
 
   def gitHookEndpoint = new GitHookServiceComponent(kubeService).service

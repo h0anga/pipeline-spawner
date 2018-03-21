@@ -4,7 +4,7 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient
 
 import scala.util.Random
 
-class Configuration {
+class Context {
   lazy val kubernetesService = new KubernetesService(kubernetesClient, namespace, gitHookPayloadToJobConverter)
   lazy val kubernetesClient = new DefaultKubernetesClient()
   lazy val namespace = "mobile" // TODO read from config file?
