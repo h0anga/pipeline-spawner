@@ -17,11 +17,11 @@ object Server extends StreamApp[IO] with Http4sDsl[IO] {
   }
 
   def stream(args: List[String], requestShutdown: IO[Unit]) = {
-    val config = new Context
+    val context = new Context
     BlazeBuilder[IO]
       .bindHttp(8080, "0.0.0.0")
       .mountService(helloService, "/")
-      .mountService(config.gitHookServiceComponent.service, "/")
+      .mountService(context.gitHookServiceComponent.service, "/")
       .serve
   }
 
