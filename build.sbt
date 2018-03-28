@@ -4,6 +4,9 @@ val Http4sVersion = "0.18.0"
 val Specs2Version = "4.0.2"
 val LogbackVersion = "1.2.3"
 val CirceVersion = "0.9.1"
+val scalaJSReactVersion = "1.1.1"
+val scalaCssVersion = "0.5.5"
+val reactJSVersion = "15.6.2"
 
 lazy val commonSettings = Seq(
   version := "0.0.1-SNAPSHOT",
@@ -40,7 +43,18 @@ lazy val frontend = project
     scalaJSUseMainModuleInitializer := true,
     Seq(fullOptJS, fastOptJS, packageJSDependencies, packageMinifiedJSDependencies)
         .map(task => crossTarget in (Compile, task) := file("static/content/target")),
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.5"
+    libraryDependencies ++= Seq(
+      "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+      "com.github.japgolly.scalajs-react" %%% "core" % scalaJSReactVersion,
+      "com.github.japgolly.scalajs-react" %%% "extra" % scalaJSReactVersion,
+      "com.github.japgolly.scalacss" %%% "core" % scalaCssVersion,
+      "com.github.japgolly.scalacss" %%% "ext-react" % scalaCssVersion
+    ),
+    jsDependencies ++= Seq(
+      "org.webjars.npm" % "react" % reactJSVersion / "react-with-addons.js" commonJSName "React" minified "react-with-addons.min.js",
+      "org.webjars.npm" % "react-dom" % reactJSVersion / "react-dom.js" commonJSName "ReactDOM" minified "react-dom.min.js" dependsOn "react-with-addons.js"
+    ),
+    skip in packageJSDependencies := false
   )
   .dependsOn(commonJS)
   .enablePlugins(ScalaJSPlugin)
