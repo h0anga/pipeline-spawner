@@ -11,9 +11,9 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.12.4",
 )
 
-lazy val common = crossProject
-lazy val commonJs = common.js
-lazy val commonJvm = common.jvm
+lazy val common = crossProject.crossType(CrossType.Pure)
+lazy val commonJS = common.js
+lazy val commonJVM = common.jvm
 
 lazy val backend = project.settings(
   commonSettings,
@@ -32,7 +32,7 @@ lazy val backend = project.settings(
     "ch.qos.logback"  %   "logback-classic"     % LogbackVersion,
     "io.fabric8"      %   "kubernetes-client"   % "3.1.8"
   )
-).dependsOn(common.jvm)
+).dependsOn(commonJVM)
 
 lazy val frontend = project
   .settings(
@@ -42,5 +42,5 @@ lazy val frontend = project
         .map(task => crossTarget in (Compile, task) := file("static/content/target")),
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.5"
   )
-  .dependsOn(commonJs)
+  .dependsOn(commonJS)
   .enablePlugins(ScalaJSPlugin)

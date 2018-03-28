@@ -25,4 +25,6 @@ object Server extends StreamApp[IO] with Http4sDsl[IO] {
       .serve
   }
 
+  def usingCommonClass = Example("foo")
+
 }
