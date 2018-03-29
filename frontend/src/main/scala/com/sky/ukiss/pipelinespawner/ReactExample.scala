@@ -82,8 +82,7 @@ object ReactExample {
 
   @JSExport
   def main(args: Array[String]): Unit = {
-    val reactContainer = document.createElement("div")
-    document.body.appendChild(reactContainer)
+    val reactContainer = document.getElementById("main")
 
     <.div(
       <.h1("Hello!"),
