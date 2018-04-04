@@ -1,3 +1,3 @@
 package com.sky.ukiss.pipelinespawner
 
-case class Example(name: String)
+case class Job(id: Long, name: String)
