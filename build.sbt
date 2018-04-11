@@ -4,7 +4,7 @@ val Http4sVersion = "0.18.0"
 val Specs2Version = "4.0.2"
 val LogbackVersion = "1.2.3"
 val CirceVersion = "0.9.1"
-val scalaJSReactVersion = "1.1.1"
+val scalaJSReactVersion = "1.2.0"
 val scalaCssVersion = "0.5.5"
 val reactJSVersion = "15.6.2"
 
@@ -48,7 +48,9 @@ lazy val frontend = project
       "com.github.japgolly.scalajs-react" %%% "core" % scalaJSReactVersion,
       "com.github.japgolly.scalajs-react" %%% "extra" % scalaJSReactVersion,
       "com.github.japgolly.scalacss" %%% "core" % scalaCssVersion,
-      "com.github.japgolly.scalacss" %%% "ext-react" % scalaCssVersion
+      "com.github.japgolly.scalacss" %%% "ext-react" % scalaCssVersion,
+      "io.circe" %%% "circe-parser" % CirceVersion,
+      "io.circe" %%% "circe-generic" % CirceVersion
     ),
     jsDependencies ++= Seq(
       "org.webjars.npm" % "react" % reactJSVersion / "react-with-addons.js" commonJSName "React" minified "react-with-addons.min.js",

@@ -1,13 +1,10 @@
-import japgolly.scalajs.react.{BackendScope, Callback}
+package com.sky.ukiss.fruit
+
 import japgolly.scalajs.react.extra.components.TriStateCheckbox
-import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import org.scalajs.dom
-import org.scalajs.dom.{document, html}
+import japgolly.scalajs.react._
 
-import scala.scalajs.js.annotation.JSExport
-
-object ReactExample {
+object FruitChooser {
 
   case class Item(id: Int, name: String)
 
@@ -74,19 +71,10 @@ object ReactExample {
       $.modState(_ intersect newProps.ids)
   }
 
-  lazy val App = ScalaComponent.builder[Props]("TriStateCheckboxExample")
+  lazy val Component = ScalaComponent.builder[Props]("TriStateCheckboxExample")
     .initialState[State](Set.empty)
     .renderBackend[Backend]
     .componentWillReceiveProps(i => i.backend.onPropsChange(i.nextProps))
     .build
 
-  @JSExport
-  def main(args: Array[String]): Unit = {
-    val reactContainer = document.getElementById("main")
-
-    <.div(
-      <.h1("Hello!"),
-      App(Props(List(Item(1, "Apple"), Item(2, "Banana"))))
-    ).renderIntoDOM(reactContainer)
-  }
 }
