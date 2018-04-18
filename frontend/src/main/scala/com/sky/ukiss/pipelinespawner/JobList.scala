@@ -10,10 +10,9 @@ import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
 import scala.scalajs.js
 
 object JobList {
-  val url = "wss://echo.websocket.org"
+  case class Props(url: String)
 
   case class State(ws: Option[WebSocket], jobs: Vector[Job], error: Option[String], message: String) {
-
     def allowSend: Boolean =
       ws.exists(_.readyState == WebSocket.OPEN) && message.nonEmpty
 
@@ -28,7 +27,7 @@ object JobList {
     }
   }
 
-  class Backend($: BackendScope[Unit, State]) {
+  class Backend($: BackendScope[Props, State]) {
     def render(s: State) = {
 
       // Can only send if WebSocket is connected and user has entered text
@@ -75,59 +74,37 @@ object JobList {
       )
     }
 
-    def onChange(e: ReactEventFromInput): Callback = {
+    private def onChange(e: ReactEventFromInput) = {
       val newMessage = e.target.value // NB don't inline `newMessage`, or it will stop working
       $.modState(_.copy(message = newMessage))
     }
 
-    def sendMessage(ws: WebSocket, msg: String): Callback = {
-      // Send a message to the WebSocket
-      def send = Callback(ws.send(msg))
+    private def sendMessage(ws: WebSocket, msg: String) = Callback(ws.send(msg)) >> $.modState(s => s.copy(message = ""))
 
-      // Update the log, clear the text box
-      def updateState = $.modState(s => s.copy(message = ""))
-
-      send >> updateState
-    }
-
-    def start: Callback = {
-
+    def start(p: Props): Callback = {
       // This will establish the connection and return the WebSocket
       def connect = CallbackTo[WebSocket] {
-
-        // Get direct access so WebSockets API can modify state directly
-        // (for access outside of a normal DOM/React callback).
-        // This means that calls like .setState will now return Unit instead of Callback.
         val direct = $.withEffectsImpure
-
-        // These are message-receiving events from the WebSocket "thread".
-
         def onopen(e: Event): Unit = {
           // Indicate the connection is open
           direct.modState(s => s) // this is basically a noop, but it I don't do it, it doesn't work.
         }
 
-        def onmessage(e: MessageEvent): Unit = {
-          // Process message received
-          direct.modState(_.withMessage(e.data.toString))
-        }
+        def onmessage(e: MessageEvent): Unit = direct.modState(_.withMessage(e.data.toString))
 
         def onerror(e: Event): Unit = {
-          // Display error message
-          val msg: String =
-            e.asInstanceOf[js.Dynamic]
+          val msg: String = e.asInstanceOf[js.Dynamic]
               .message.asInstanceOf[js.UndefOr[String]]
               .fold(s"Error occurred!")("Error occurred: " + _)
           direct.modState(_.copy(error = Some(msg)))
         }
 
         def onclose(e: CloseEvent): Unit = {
-          // Close the connection
           direct.modState(_.copy(ws = None, error = Some(s"""Closed. Reason = "${e.reason}"""")))
         }
 
         // Create WebSocket and setup listeners
-        val ws = new WebSocket(url)
+        val ws = new WebSocket(p.url)
         ws.onopen = onopen _
         ws.onclose = onclose _
         ws.onmessage = onmessage _
@@ -151,10 +128,10 @@ object JobList {
     }
   }
 
-  val WebSocketsApp = ScalaComponent.builder[Unit]("WebSocketsApp")
+  def WebSocketsApp = ScalaComponent.builder[Props]("WebSocketsApp")
     .initialState(State(None, Vector.empty, None, """{"id":0, "name": "MyJob"}"""))
     .renderBackend[Backend]
-    .componentDidMount(_.backend.start)
+    .componentDidMount($ => $.backend.start($.props))
     .componentWillUnmount(_.backend.end)
     .build
 }

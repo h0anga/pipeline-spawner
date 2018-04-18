@@ -13,7 +13,7 @@ object Main {
 
     <.div(
       <.h1("Current Jobs"),
-      JobList.WebSocketsApp()
+      JobList.WebSocketsApp(JobList.Props("wss://echo.websocket.org"))
     ).renderIntoDOM(reactContainer)
   }
 }
