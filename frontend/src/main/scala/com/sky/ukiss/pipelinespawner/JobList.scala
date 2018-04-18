@@ -1,7 +1,6 @@
 package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.api.Job
-import io.circe
 import io.circe.parser.decode
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, Callback, CallbackOption, _}
@@ -19,11 +18,10 @@ object JobList {
       ws.exists(_.readyState == WebSocket.OPEN) && message.nonEmpty
 
     // Create a new state with a line added to the log
-    def log(line: String): State = {
+    def withMessage(line: String): State = {
       import io.circe.generic.auto._
 
-      val decoded: Either[circe.Error, Job] = decode[Job](line)
-      decoded match {
+      decode[Job](line) match {
         case Right(job) => copy(jobs = jobs :+ job, error = None)
         case Left(err) => copy(error = Some(err.getMessage))
       }
@@ -46,31 +44,39 @@ object JobList {
         )
 
       <.div(
-        <.h3("Type a message and get an echo:"),
-        <.div(
-          <.input.text(
-            ^.autoFocus := true,
-            ^.value := s.message,
-            ^.onChange ==> onChange,
-            ^.onKeyDown ==> sendOnEnter),
+        <.p("Enter a Job in Json format and watch it rendered in the list below:"),
+        <.form(
+          ^.className := "form-inline"
+        )(
+          <.div(
+            ^.className := "form-group",
+            <.input.text(
+              ^.className := "form-control",
+              ^.autoFocus := true,
+              ^.value := s.message,
+              ^.onChange ==> onChange,
+              ^.onKeyDown ==> sendOnEnter),
+          ),
           <.button(
+            ^.classSet("btn" -> true,  "btn-primary" -> true),
             ^.disabled := send.isEmpty, // Disable button if unable to send
             ^.onClick -->? send, // --> suffixed by ? because it's for Option[Callback]
-            "Send")),
-        <.h4("Connection log"),
-        <.ul(  // Display log
+            "Send")
+        ),
+        <.h3("Jobs"),
+        <.ul( // Display jobs
           s.jobs.map(j => <.li(j.name)): _*
         ),
         <.div(
-          ^.classSet("error" -> s.error.isDefined, "visible" -> s.error.isDefined)
+          ^.classSet("bg-danger" -> s.error.isDefined, "visible" -> s.error.isDefined)
         )(
-            s.error
+          s.error
         )
       )
     }
 
     def onChange(e: ReactEventFromInput): Callback = {
-      val newMessage = e.target.value
+      val newMessage = e.target.value // NB don't inline `newMessage`, or it will stop working
       $.modState(_.copy(message = newMessage))
     }
 
@@ -79,7 +85,7 @@ object JobList {
       def send = Callback(ws.send(msg))
 
       // Update the log, clear the text box
-      def updateState = $.modState(s => s.log(s.message).copy(message = ""))
+      def updateState = $.modState(s => s.copy(message = ""))
 
       send >> updateState
     }
@@ -98,12 +104,12 @@ object JobList {
 
         def onopen(e: Event): Unit = {
           // Indicate the connection is open
-          direct.modState(_.log("Connected."))
+          direct.modState(s => s) // this is basically a noop, but it I don't do it, it doesn't work.
         }
 
         def onmessage(e: MessageEvent): Unit = {
-          // Echo message received
-          direct.modState(_.log(s"Echo: ${e.data.toString}"))
+          // Process message received
+          direct.modState(_.withMessage(e.data.toString))
         }
 
         def onerror(e: Event): Unit = {
@@ -112,12 +118,12 @@ object JobList {
             e.asInstanceOf[js.Dynamic]
               .message.asInstanceOf[js.UndefOr[String]]
               .fold(s"Error occurred!")("Error occurred: " + _)
-          direct.modState(_.log(msg))
+          direct.modState(_.copy(error = Some(msg)))
         }
 
         def onclose(e: CloseEvent): Unit = {
           // Close the connection
-          direct.modState(_.copy(ws = None).log(s"""Closed. Reason = "${e.reason}""""))
+          direct.modState(_.copy(ws = None, error = Some(s"""Closed. Reason = "${e.reason}"""")))
         }
 
         // Create WebSocket and setup listeners
@@ -131,8 +137,8 @@ object JobList {
 
       // Here use attempt to catch any exceptions in connect
       connect.attempt.flatMap {
-        case Right(ws) => $.modState(_.log(s"Connecting to $url ...").copy(ws = Some(ws)))
-        case Left(error) => $.modState(_.log(s"Error connecting: ${error.getMessage}"))
+        case Right(ws) => $.modState(_.copy(ws = Some(ws)))
+        case Left(error) => $.modState(_.copy(error = Some(s"Error connecting: ${error.getMessage}")))
       }
     }
 
@@ -146,7 +152,7 @@ object JobList {
   }
 
   val WebSocketsApp = ScalaComponent.builder[Unit]("WebSocketsApp")
-    .initialState(State(None, Vector.empty, None, """ {"id":0, "name": "MyJob"} """))
+    .initialState(State(None, Vector.empty, None, """{"id":0, "name": "MyJob"}"""))
     .renderBackend[Backend]
     .componentDidMount(_.backend.start)
     .componentWillUnmount(_.backend.end)
