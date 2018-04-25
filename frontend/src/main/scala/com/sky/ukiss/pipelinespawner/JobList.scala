@@ -35,17 +35,13 @@ object JobList {
         for (ws <- s.ws if s.allowSend)
           yield sendMessage(ws, s.message)
 
-      def sendOnEnter(e: ReactKeyboardEvent): Callback =
-        CallbackOption.asEventDefault(e,
-          CallbackOption.keyCodeSwitch(e) {
-            case KeyCode.Enter => send.getOrEmpty
-          }
-        )
+      def handleSubmit(e: ReactEventFromInput) = send.map(e.preventDefaultCB >> _)
 
       <.div(
         <.p("Enter a Job in Json format and watch it rendered in the list below:"),
         <.form(
-          ^.className := "form-inline"
+          ^.className := "form-inline",
+          ^.onSubmit ==>? handleSubmit
         )(
           <.div(
             ^.className := "form-group",
@@ -53,13 +49,12 @@ object JobList {
               ^.className := "form-control",
               ^.autoFocus := true,
               ^.value := s.message,
-              ^.onChange ==> onChange,
-              ^.onKeyDown ==> sendOnEnter),
+              ^.onChange ==> onChange
+            )
           ),
           <.button(
             ^.classSet("btn" -> true,  "btn-primary" -> true),
             ^.disabled := send.isEmpty, // Disable button if unable to send
-            ^.onClick -->? send, // --> suffixed by ? because it's for Option[Callback]
             "Send")
         ),
         <.h3("Jobs"),
