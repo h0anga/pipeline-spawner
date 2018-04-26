@@ -22,7 +22,7 @@ lazy val commonJVM = common.jvm
 lazy val backend = project.settings(
   commonSettings,
   mainClass in assembly := Some("com.sky.ukiss.pipelinespawner.Server"),
-  assemblyJarName in assembly := s"pipeline-spawner-$version.jar",
+  assemblyJarName in assembly := s"pipeline-spawner-${version.value}.jar",
   unmanagedResourceDirectories in Compile += baseDirectory.value / ".." / "static",
   libraryDependencies ++= Seq(
     "org.http4s"      %%  "http4s-blaze-server" % Http4sVersion,
