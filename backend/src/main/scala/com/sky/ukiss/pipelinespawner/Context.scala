@@ -13,5 +13,6 @@ class Context {
   lazy val gitHookServiceComponent = new GitHookServiceComponent(kubernetesService)
   lazy val artifactoryUsername = Config().getString("pipeline-spawner.artifactoryUsername")
   lazy val artifactoryPassword = Config().getString("pipeline-spawner.artifactoryPassword")
+  lazy val frontendRoute = new FrontendRoute()
 
 }
