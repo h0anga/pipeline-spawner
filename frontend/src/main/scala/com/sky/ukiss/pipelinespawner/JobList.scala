@@ -3,8 +3,7 @@ package com.sky.ukiss.pipelinespawner
 import com.sky.ukiss.pipelinespawner.api.Job
 import io.circe.parser.decode
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{BackendScope, Callback, CallbackOption, _}
-import org.scalajs.dom.ext.KeyCode
+import japgolly.scalajs.react.{BackendScope, Callback, _}
 import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
 
 import scala.scalajs.js
@@ -57,15 +56,28 @@ object JobList {
             ^.disabled := send.isEmpty, // Disable button if unable to send
             "Send")
         ),
-        <.h3("Jobs"),
-        <.ul( // Display jobs
-          s.jobs.map(j => <.li(j.name)): _*
-        ),
-        <.div(
-          ^.classSet("bg-danger" -> s.error.isDefined, "visible" -> s.error.isDefined)
+        <.table(
+          ^.className := "table table-striped table-hover"
         )(
-          s.error
-        )
+          <.thead(
+            <.th("ID"), <.th("Name")
+          ),
+          <.tbody(
+            s.jobs.map(j => <.tr(
+              <.td(j.id), <.td(j.name)
+            )): _*
+          )
+        ),
+        if (s.error.isDefined) {
+          <.div(
+            ^.className := "alert alert-danger",
+            ^.role := "alert"
+          )(
+            s.error
+          )
+        } else {
+          <.div()
+        }
       )
     }
 
@@ -124,7 +136,7 @@ object JobList {
   }
 
   def WebSocketsApp = ScalaComponent.builder[Props]("WebSocketsApp")
-    .initialState(State(None, Vector.empty, None, """{"id":0, "name": "MyJob"}"""))
+    .initialState(State(None, Vector.empty, None, """{ "id" : 0, "name" : "MyJob" }"""))
     .renderBackend[Backend]
     .componentDidMount($ => $.backend.start($.props))
     .componentWillUnmount(_.backend.end)
