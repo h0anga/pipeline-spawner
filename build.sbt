@@ -12,6 +12,7 @@ lazy val commonSettings = Seq(
   version := "0.0.1-SNAPSHOT",
   organization := "com.sky.ukiss",
   scalaVersion := "2.12.4",
+  test in assembly := {},
 )
 
 lazy val common = crossProject.crossType(CrossType.Pure)
@@ -20,6 +21,8 @@ lazy val commonJVM = common.jvm
 
 lazy val backend = project.settings(
   commonSettings,
+  mainClass in assembly := Some("com.sky.ukiss.pipelinespawner.Server"),
+  assemblyJarName in assembly := s"pipeline-spawner-$version.jar",
   unmanagedResourceDirectories in Compile += baseDirectory.value / ".." / "static",
   libraryDependencies ++= Seq(
     "org.http4s"      %%  "http4s-blaze-server" % Http4sVersion,
