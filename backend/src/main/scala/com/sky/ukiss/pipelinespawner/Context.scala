@@ -1,18 +1,19 @@
 package com.sky.ukiss.pipelinespawner
 
+import cats.effect.Effect
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 
 import scala.util.Random
 
-class Context {
+class Context[F[_]](implicit F: Effect[F]) {
   lazy val kubernetesService = new KubernetesService(kubernetesClient, namespace, gitHookPayloadToJobConverter)
   lazy val kubernetesClient = new DefaultKubernetesClient()
   lazy val namespace = "mobile" // TODO read from config file?
   lazy val gitHookPayloadToJobConverter = new ConvertGitHookToJob(generateRandomId)
   lazy val generateRandomId = () => Random.alphanumeric.filter(c => c.isDigit || c.isLower).take(6).mkString
   lazy val gitHookServiceComponent = new GitHookServiceComponent(kubernetesService)
-  lazy val myGitHookServiceComponent = new MyGitHookServiceComponent(kubernetesService)
-  lazy val jobEvents = new JobEvents(kubernetesClient, namespace)
+//  lazy val myGitHookServiceComponent = new MyGitHookServiceComponent(kubernetesService)
+  lazy val jobEvents = new JobEvents[F](kubernetesClient, namespace)
   lazy val artifactoryUsername = Config().getString("pipeline-spawner.artifactoryUsername")
   lazy val artifactoryPassword = Config().getString("pipeline-spawner.artifactoryPassword")
 
