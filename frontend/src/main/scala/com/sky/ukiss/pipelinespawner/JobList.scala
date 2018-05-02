@@ -9,9 +9,16 @@ import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
 import scala.scalajs.js
 
 object JobList {
+
   case class Props(url: String)
 
-  case class State(ws: Option[WebSocket], jobs: Vector[Job], error: Option[String], message: String) {
+  case class State(
+                    ws: Option[WebSocket],
+                    jobs: Vector[Job],
+                    error: Option[String],
+                    message: String, // TODO to be removed when integration with backend works
+                    displayedJob: Option[Job] = None
+                  ) {
     def allowSend: Boolean =
       ws.exists(_.readyState == WebSocket.OPEN) && message.nonEmpty
 
@@ -52,7 +59,7 @@ object JobList {
             )
           ),
           <.button(
-            ^.classSet("btn" -> true,  "btn-primary" -> true),
+            ^.classSet("btn" -> true, "btn-primary" -> true),
             ^.disabled := send.isEmpty, // Disable button if unable to send
             "Send")
         ),
@@ -63,9 +70,19 @@ object JobList {
             <.th("ID"), <.th("Name")
           ),
           <.tbody(
-            s.jobs.map(j => <.tr(
-              <.td(j.id), <.td(j.name)
-            )): _*
+            s.jobs.map(j => {
+              s.displayedJob.filter(_.id == j.id).map(displayedJob =>
+                <.tr(
+                  <.td(
+                    ^.colSpan := 2
+                  )(JobInfo.Component(displayedJob))
+                )
+              ).getOrElse(
+                <.tr(
+                  <.td(j.id), <.td(j.name)
+                )
+              )
+            }): _*
           )
         ),
         if (s.error.isDefined) {
@@ -92,6 +109,7 @@ object JobList {
       // This will establish the connection and return the WebSocket
       def connect = CallbackTo[WebSocket] {
         val direct = $.withEffectsImpure
+
         def onopen(e: Event): Unit = {
           // Indicate the connection is open
           direct.modState(s => s) // this is basically a noop, but it I don't do it, it doesn't work.
@@ -101,8 +119,8 @@ object JobList {
 
         def onerror(e: Event): Unit = {
           val msg: String = e.asInstanceOf[js.Dynamic]
-              .message.asInstanceOf[js.UndefOr[String]]
-              .fold(s"Error occurred!")("Error occurred: " + _)
+            .message.asInstanceOf[js.UndefOr[String]]
+            .fold(s"Error occurred!")("Error occurred: " + _)
           direct.modState(_.copy(error = Some(msg)))
         }
 
@@ -135,7 +153,7 @@ object JobList {
     }
   }
 
-  def WebSocketsApp = ScalaComponent.builder[Props]("WebSocketsApp")
+  def Component = ScalaComponent.builder[Props]("Jobs")
     .initialState(State(None, Vector.empty, None, """{ "id" : 0, "name" : "MyJob" }"""))
     .renderBackend[Backend]
     .componentDidMount($ => $.backend.start($.props))
