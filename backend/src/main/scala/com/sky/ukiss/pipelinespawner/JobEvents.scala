@@ -58,7 +58,7 @@ class JobEvents[F[_]](client: KubernetesClient,
           case DELETED => jobs -= jobData
           case ERROR => logger.error("error about job events", job)
         }
-//        println("*** Jobs changed")
+        println("*** Jobs changed")
         queues.foreach(
           q => q.enqueue1(Text("""{"id": 0, "name": "from the backend"}"""))
 //          _ => println("*** Jobs changed")

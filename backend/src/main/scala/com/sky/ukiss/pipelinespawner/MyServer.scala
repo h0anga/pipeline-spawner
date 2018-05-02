@@ -37,7 +37,7 @@ class MyServerApp[F[_]](implicit F: Effect[F]) extends StreamApp[F] with Http4sD
 //      jobEvents.addQueue(queue)
 
       val fromClient: Sink[F, WebSocketFrame] = _.evalMap { (ws: WebSocketFrame) =>
-        F.delay()
+        F.delay(println("smth from ws"))
       }
 
       queue.flatMap { q =>
