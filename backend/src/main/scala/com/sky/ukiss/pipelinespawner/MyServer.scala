@@ -41,7 +41,8 @@ class MyServerApp[F[_]](implicit F: Effect[F]) extends StreamApp[F] with Http4sD
       }
 
       queue.flatMap { q =>
-        jobEvents.addQueue(q)
+        jobEvents.addQueue(q.enqueue)
+
         val toClient = q.dequeue//.through(echoReply)
 //        val e = q.enqueue
         WebSocketBuilder[F].build(toClient, fromClient)

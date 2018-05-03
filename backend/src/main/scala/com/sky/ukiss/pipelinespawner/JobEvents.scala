@@ -35,9 +35,9 @@ class JobEvents[F[_]](client: KubernetesClient,
   val jobsCell: mutable.Set[JobData] = mutable.Set()
   def jobs = jobsCell.seq
 
-  private var queues: mutable.MutableList[Queue[F, WebSocketFrame]] = mutable.MutableList()//[Queue[F, WebSocketFrame]]
+  private var queues: mutable.MutableList[Sink[F, WebSocketFrame]] = mutable.MutableList()//[Queue[F, WebSocketFrame]]
 
-  def addQueue(queue: Queue[F, WebSocketFrame]) = queues += queue
+  def addQueue(queue: Sink[F, WebSocketFrame]) = queues += queue
 
     jobs ++= client.extensions().jobs()
       .inNamespace(namespace)
@@ -60,7 +60,7 @@ class JobEvents[F[_]](client: KubernetesClient,
         }
         println("*** Jobs changed")
         queues.foreach(
-          q => q.enqueue1(Text("""{"id": 0, "name": "from the backend"}"""))
+          q => q(Text("""{"id": 0, "name": "from the backend"}"""))
 //          _ => println("*** Jobs changed")
         )
 //        val scheduler = Scheduler[F](corePoolSize = 2)
