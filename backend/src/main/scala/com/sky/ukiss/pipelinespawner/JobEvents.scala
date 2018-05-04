@@ -1,5 +1,6 @@
 package com.sky.ukiss.pipelinespawner
 
+import cats.effect.{Effect, IO}
 import fs2.async.mutable.Queue
 import io.fabric8.kubernetes.api.model.Job
 import io.fabric8.kubernetes.client.Watcher.Action._
@@ -9,25 +10,13 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import cats.effect.Effect
-import fs2.{Pipe, Scheduler, async}
-import org.http4s.server.websocket.WebSocketBuilder
-import cats.implicits._
-import cats.effect._
-import cats.implicits._
-import com.sky.ukiss.pipelinespawner.api.JobEvent
+import scala.concurrent.Future
 import fs2._
-import fs2.StreamApp.ExitCode
-import org.http4s._
-import org.http4s.dsl.Http4sDsl
-import org.http4s.server.blaze.BlazeBuilder
-import org.http4s.server.websocket._
-import org.http4s.websocket.WebsocketBits._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class JobEvents[F[_]](client: KubernetesClient,
+class MyJobEvents[F[_]](client: KubernetesClient,
                   namespace: String)(implicit F: Effect[F]) {
   def pushJobInfo() = Text(s"Something new")
 
@@ -35,11 +24,58 @@ class JobEvents[F[_]](client: KubernetesClient,
   val jobsCell: mutable.Set[JobData] = mutable.Set()
   def jobs = jobsCell.seq
 
-  private var queues: mutable.MutableList[Sink[F, WebSocketFrame]] = mutable.MutableList()//[Queue[F, WebSocketFrame]]
+//  def toClientScheduledFromJobEvents0: Stream[IO, WebSocketFrame] = {
+//    Scheduler[IO](corePoolSize = 2).flatMap(_.awakeEvery[IO](1.seconds).map(d => Text(s"Ping! $d")))
+//    Stream[F, WebSocketFrame]
+    //queues1
+    //dequeue.map(e => Text("*** attempt to output smth"))
+//    Scheduler[F](corePoolSize = 2).flatMap(_.awakeEvery[F](1.seconds).map(d => Text(s"Ping! $d")))
+//  }
 
-  def addQueue(queue: Sink[F, WebSocketFrame]) = queues += queue
+//  val streamData1: Stream[IO, String] = ???
 
-    jobs ++= client.extensions().jobs()
+  val k8sEventBuffer: Stream[IO, Queue[IO, String]] = Stream.eval(async.circularBuffer[IO, String](5))
+
+  val element: Stream[IO, WebSocketFrame] =
+    for {
+      q <- k8sEventBuffer
+      data <- q.dequeue
+    } yield Text(data)
+
+  val streamData: Stream[IO, WebSocketFrame] = Scheduler[IO](corePoolSize = 1).flatMap { scheduler =>
+    scheduler.awakeEvery[IO](1.second).map(_ => Text((System.currentTimeMillis() % 10000).toString))
+  }
+
+
+  def dequeueData[IO[_]](q: Queue[IO, WebSocketFrame])(implicit F: Effect[IO]) = q.dequeue.take(4)
+
+  def enqueueData[IO[_]](q: Queue[IO, WebSocketFrame])(implicit F: Effect[IO]): Stream[IO, Future[Unit]] =
+    Stream.eval(
+      F.delay(
+        streamData
+          .map(s => {
+            async.unsafeRunAsync(q.enqueue1(s))( _ => IO.unit)
+          })
+          .compile
+          .drain
+          .unsafeToFuture()
+      )
+    )
+
+
+  def toClientScheduledFromJobEvents: Stream[IO, WebSocketFrame] = {
+    val queue: Stream[IO, Queue[IO, WebSocketFrame]] = Stream.eval(async.circularBuffer[IO, WebSocketFrame](5))
+
+    queue.flatMap { q =>
+      val enqueueStream = enqueueData(q)
+
+      val dequeueStream = dequeueData(q)
+
+      dequeueStream.concurrently(enqueueStream)
+    }
+  }
+
+  jobs ++= client.extensions().jobs()
       .inNamespace(namespace)
       .list().getItems.asScala
       .map((j: Job) => JobData(j.getMetadata.getName, j.getMetadata.getLabels.get("app_name")))
@@ -47,6 +83,7 @@ class JobEvents[F[_]](client: KubernetesClient,
 
     client.extensions().jobs().inNamespace(namespace).watch(new Watcher[Job] {
       override def onClose(cause: KubernetesClientException): Unit = ???
+
 
       override def eventReceived(action: Watcher.Action, job: Job): Unit = {
         val name = job.getMetadata.getName
@@ -58,31 +95,12 @@ class JobEvents[F[_]](client: KubernetesClient,
           case DELETED => jobs -= jobData
           case ERROR => logger.error("error about job events", job)
         }
-        println("*** Jobs changed")
-        queues.foreach(
-          q => q(Text("""{"id": 0, "name": "from the backend"}"""))
-//          _ => println("*** Jobs changed")
-        )
-//        val scheduler = Scheduler[F](corePoolSize = 2)
-//        scheduler.awakeEvery[F](1.seconds).map(d => Text(s"Ping! $d"))
-
-       // SessionMaster ! JobsChanged - ? notification to websocket
-
-//        val queue: F[Queue[F, WebSocketFrame]] = async.unboundedQueue[F, WebSocketFrame]
-//        val echoReply: Pipe[F, WebSocketFrame, WebSocketFrame] = _.collect {
-//          case Text(msg, _) => Text("You sent the server: " + msg)
-//          case _ => Text("Something new")
-//        }
-//
-//        queue.flatMap { q =>
-//          val d = q.dequeue.through(echoReply)
-//          val e = q.enqueue
-//          WebSocketBuilder[F].build(d, e)
-//        }
+        println("*** Jobs changed: " + name)
+//        k8sEventBuffer.flatMap(buffer => buffer.enqueue(Stream(jobData.name)))
       }
     })
   }
 
-object JobsChanged
+//object JobsChanged
 
 case class JobData(name: String, app: String)
