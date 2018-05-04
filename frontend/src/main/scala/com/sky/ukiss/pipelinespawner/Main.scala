@@ -12,8 +12,10 @@ object Main {
     val reactContainer = document.getElementById("main")
 
     <.div(
+      ^.className := "container-fluid"
+    )(
       <.h1("Current Jobs"),
-      JobList.WebSocketsApp(JobList.Props("wss://echo.websocket.org"))
+      JobList.Component(JobList.Props("wss://echo.websocket.org"))
     ).renderIntoDOM(reactContainer)
   }
 }
