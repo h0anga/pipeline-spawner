@@ -16,5 +16,6 @@ class Context[F[_]](implicit F: Effect[F]) {
   lazy val jobEvents = new JobEvents[F](kubernetesClient, namespace)
   lazy val artifactoryUsername = Config().getString("pipeline-spawner.artifactoryUsername")
   lazy val artifactoryPassword = Config().getString("pipeline-spawner.artifactoryPassword")
+  lazy val frontendRoute = new FrontendRoute()
 
 }
