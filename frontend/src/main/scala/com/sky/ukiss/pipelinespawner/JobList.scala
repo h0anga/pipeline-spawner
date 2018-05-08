@@ -1,6 +1,6 @@
 package com.sky.ukiss.pipelinespawner
 
-import com.sky.ukiss.pipelinespawner.api.Job
+import com.sky.ukiss.pipelinespawner.api._
 import io.circe.parser.decode
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, Callback, _}
@@ -13,7 +13,7 @@ object JobList {
   case class Props(url: String)
 
   case class State(
-                    ws: Option[WebSocket],
+                    ws: Option[WebSocket], // TODO open websocket when component is created, and assume it's always there?
                     jobs: Vector[Job],
                     error: Option[String],
                     message: String, // TODO to be removed when integration with backend works
@@ -25,9 +25,13 @@ object JobList {
     // Create a new state with a line added to the log
     def withMessage(line: String): State = {
       import io.circe.generic.auto._
-
-      decode[Job](line) match {
-        case Right(job) => copy(jobs = jobs :+ job, error = None)
+      import io.circe.syntax._
+      println(line)
+      decode[WsMessage](line) match {
+        case Right(WsMessage(JobCreated(job))) => println("job created: " + job); copy(jobs = jobs :+ job, error = None)
+        case Right(WsMessage(NoJobEvent)) => println("Received the initial job event"); this
+        case Right(WsMessage(Ping)) => ws.foreach(_.send(WsMessage(Pong).asJson.spaces2)); this
+        case Right(WsMessage(other)) => copy(error = Some(s"Unsupported event: $other"))
         case Left(err) => copy(error = Some(err.getMessage))
       }
     }
@@ -67,7 +71,9 @@ object JobList {
           ^.className := "table table-striped table-hover"
         )(
           <.thead(
-            <.th("ID"), <.th("Name")
+            <.tr(
+              <.th("ID"), <.th("Name")
+            )
           ),
           <.tbody(
             s.jobs.map(j => {
