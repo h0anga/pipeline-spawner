@@ -24,35 +24,42 @@ class MyJobEvents[F[_]](client: KubernetesClient,
   val jobsCell: mutable.Set[JobData] = mutable.Set()
   def jobs = jobsCell.seq
 
-//  def toClientScheduledFromJobEvents0: Stream[IO, WebSocketFrame] = {
-//    Scheduler[IO](corePoolSize = 2).flatMap(_.awakeEvery[IO](1.seconds).map(d => Text(s"Ping! $d")))
-//    Stream[F, WebSocketFrame]
-    //queues1
-    //dequeue.map(e => Text("*** attempt to output smth"))
-//    Scheduler[F](corePoolSize = 2).flatMap(_.awakeEvery[F](1.seconds).map(d => Text(s"Ping! $d")))
+  val simpleQueue: mutable.Queue[String] = mutable.Queue.empty[String]
+
+//  val simpleQueueData1: Stream[IO, WebSocketFrame] = Stream(Text(simpleQueue.dequeue()))
+
+//    Scheduler[IO](corePoolSize = 1).flatMap { scheduler =>
+//    scheduler.awakeEvery[IO](1.second).map(_ => {
+////      println("*** attempt to simpleQueue.dequeue")
+//      Text(simpleQueue.dequeue())
+//    })
 //  }
 
-//  val streamData1: Stream[IO, String] = ???
+  val simpleQueueData: Stream[IO, WebSocketFrame] = Scheduler[IO](corePoolSize = 1).flatMap { scheduler =>
+    scheduler.awakeEvery[IO](1.second).map(_ => {
+      println("*** attempt to simpleQueue.dequeue")
+      Text(simpleQueue.dequeue())
+    })
+  }
 
-  val k8sEventBuffer: Stream[IO, Queue[IO, String]] = Stream.eval(async.circularBuffer[IO, String](5))
-
-  val element: Stream[IO, WebSocketFrame] =
-    for {
-      q <- k8sEventBuffer
-      data <- q.dequeue
-    } yield Text(data)
+  val simpleQueueData2: Stream[IO, WebSocketFrame] = Scheduler[IO](corePoolSize = 1).flatMap { scheduler =>
+    scheduler.awakeEvery[IO](1.second).map(_ => {
+      //      println("*** attempt to simpleQueue.dequeue")
+      Text(simpleQueue.dequeue())
+    })
+  }
 
   val streamData: Stream[IO, WebSocketFrame] = Scheduler[IO](corePoolSize = 1).flatMap { scheduler =>
     scheduler.awakeEvery[IO](1.second).map(_ => Text((System.currentTimeMillis() % 10000).toString))
   }
 
 
-  def dequeueData[IO[_]](q: Queue[IO, WebSocketFrame])(implicit F: Effect[IO]) = q.dequeue.take(4)
+  def dequeueData[IO[_]](q: Queue[IO, WebSocketFrame])(implicit F: Effect[IO]) = q.dequeue//.take(4)
 
   def enqueueData[IO[_]](q: Queue[IO, WebSocketFrame])(implicit F: Effect[IO]): Stream[IO, Future[Unit]] =
-    Stream.eval(
+    Stream.repeatEval(
       F.delay(
-        streamData
+        simpleQueueData
           .map(s => {
             async.unsafeRunAsync(q.enqueue1(s))( _ => IO.unit)
           })
@@ -96,7 +103,9 @@ class MyJobEvents[F[_]](client: KubernetesClient,
           case ERROR => logger.error("error about job events", job)
         }
         println("*** Jobs changed: " + name)
-//        k8sEventBuffer.flatMap(buffer => buffer.enqueue(Stream(jobData.name)))
+        simpleQueue.enqueue(name)
+        println("*** simpleQueue = " + simpleQueue)
+
       }
     })
   }
