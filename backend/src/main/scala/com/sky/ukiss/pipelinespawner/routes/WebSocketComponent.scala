@@ -18,7 +18,7 @@ class WebSocketComponent(jobEvents: JobEvents) extends ScalatraServlet
     Ok("Hello world")
   }
 
-  atmosphere("/ws") {
+  atmosphere("/") {
     new AtmosphereClient {
       def receive = {
         case Connected =>

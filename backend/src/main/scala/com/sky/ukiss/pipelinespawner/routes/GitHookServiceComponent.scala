@@ -7,7 +7,7 @@ import org.scalatra.{BadRequest, Ok, ScalatraServlet}
 class GitHookServiceComponent(kube: KubernetesService) extends ScalatraServlet {
   import io.circe.generic.auto._
 
-  post("/hook") {
+  post("/") {
     io.circe.parser.decode[GitHookPayload](request.body) match {
       case Right(payload) =>
         val submission = kube.onGitHook(payload)
