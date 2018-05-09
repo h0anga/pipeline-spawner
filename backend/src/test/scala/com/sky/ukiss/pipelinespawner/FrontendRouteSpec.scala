@@ -1,6 +1,7 @@
 package com.sky.ukiss.pipelinespawner
 
 import cats.effect.IO
+import com.sky.ukiss.pipelinespawner.routes.FrontendRoute
 import org.http4s.{Request, Status, Uri}
 import org.specs2.mock.Mockito
 import org.specs2.mutable._

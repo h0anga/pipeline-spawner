@@ -1,5 +1,7 @@
-package com.sky.ukiss.pipelinespawner
+package com.sky.ukiss.pipelinespawner.routes
 
+import com.sky.ukiss.pipelinespawner.KubernetesService
+import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
 import org.scalatra.{BadRequest, Ok, ScalatraServlet}
 
 class GitHookServiceComponent(kube: KubernetesService) extends ScalatraServlet {

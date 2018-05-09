@@ -1,5 +1,6 @@
 package com.sky.ukiss.pipelinespawner
 
+import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
 import io.circe.generic.auto._
 import org.specs2.mutable.Specification
 

@@ -1,9 +1,7 @@
-package com.sky.ukiss.pipelinespawner
+package com.sky.ukiss.pipelinespawner.routes
 
 import org.apache.commons.lang3.StringUtils
-import org.scalatra.{NotFound, ScalatraServlet}
-
-import scala.io.Source
+import org.scalatra.{NotFound, Ok, ScalatraServlet}
 
 class FrontendRoute extends ScalatraServlet {
   get("/") {
@@ -12,8 +10,9 @@ class FrontendRoute extends ScalatraServlet {
 
   get("/static/*") {
     val resourcePath = getResourcePath
-    Option(servletContext.getResourceAsStream(resourcePath)) match {
-      case Some(inputStream) => Source.fromInputStream(inputStream).toArray
+
+    Option(classOf[FrontendRoute].getResourceAsStream(resourcePath)) match {
+      case Some(inputStream) => org.scalatra.util.io.copy(inputStream, response.getOutputStream)
       case None          => NotFound
     }
   }

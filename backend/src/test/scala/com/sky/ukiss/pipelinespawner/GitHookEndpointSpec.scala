@@ -1,6 +1,8 @@
 package com.sky.ukiss.pipelinespawner
 
 import cats.effect.IO
+import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
+import com.sky.ukiss.pipelinespawner.routes.GitHookServiceComponent
 import org.http4s._
 import org.specs2.mock.Mockito
 import org.specs2.mutable._

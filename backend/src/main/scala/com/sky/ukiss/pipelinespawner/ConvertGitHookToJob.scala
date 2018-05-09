@@ -1,5 +1,6 @@
 package com.sky.ukiss.pipelinespawner
 
+import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
 import io.fabric8.kubernetes.api.model._
 import org.log4s
 

@@ -10,6 +10,8 @@ val scalaJSReactVersion = "1.2.0"
 val scalaCssVersion = "0.5.5"
 val reactJSVersion = "15.6.2"
 val ScalatraVersion = "2.5.4"
+//val JettyVersion = "9.4.6.v20170531"
+val JettyVersion = "9.2.22.v20170606"
 
 lazy val commonSettings = Seq(
   version := "0.0.1-SNAPSHOT",
@@ -28,34 +30,43 @@ lazy val backend = project.settings(
   assemblyJarName in assembly := s"pipeline-spawner-${version.value}.jar",
   unmanagedResourceDirectories in Compile += baseDirectory.value / ".." / "static",
   libraryDependencies ++= Seq(
-//    "org.http4s"      %%  "http4s-blaze-server" % Http4sVersion,
-//    "org.http4s"      %%  "http4s-circe"        % Http4sVersion,
-//    "org.http4s"      %%  "http4s-dsl"          % Http4sVersion,
     "org.scalatra" %% "scalatra" % ScalatraVersion,
-    "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % "test",
+    "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
+    "org.scalatra" %% "scalatra-atmosphere" % ScalatraVersion,
+    "org.scalatra" %% "scalatra-json" % ScalatraVersion,
+    "org.scalatra" %% "scalatra-specs2" % ScalatraVersion % Test,
+    "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % Test,
     "ch.qos.logback" % "logback-classic" % "1.2.3" % "runtime",
-    "org.eclipse.jetty" % "jetty-webapp" % "9.2.19.v20160908" % "container",
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-    "io.circe"        %%  "circe-generic"       % CirceVersion,
-    "io.circe"        %%  "circe-literal"       % CirceVersion,
-    "io.circe"        %%  "circe-parser"        % CirceVersion,
-    "org.log4s"       %%  "log4s"               % "1.4.0",
-    "org.specs2"      %%  "specs2-core"         % Specs2Version % "test",
-    "org.specs2"      %%  "specs2-mock"         % Specs2Version % "test",
-    "com.eed3si9n"    %%  "gigahorse-github"    % "gigahorse0.3.1_0.2.0",
-    "ch.qos.logback"  %   "logback-classic"     % LogbackVersion,
-    "io.fabric8"      %   "kubernetes-client"   % "3.1.8"
+    "io.circe" %% "circe-generic" % CirceVersion,
+    "io.circe" %% "circe-literal" % CirceVersion,
+    "io.circe" %% "circe-parser" % CirceVersion,
+    "org.json4s" %% "json4s-jackson" % "3.5.2",
+    "org.log4s" %% "log4s" % "1.4.0",
+    "org.specs2" %% "specs2-core" % Specs2Version % "test",
+    "org.specs2" %% "specs2-mock" % Specs2Version % "test",
+    "com.eed3si9n" %% "gigahorse-github" % "gigahorse0.3.1_0.2.0",
+    "ch.qos.logback" % "logback-classic" % LogbackVersion,
+    "io.fabric8" % "kubernetes-client" % "3.1.8",
+    "org.eclipse.jetty" % "jetty-plus" % JettyVersion % "container;provided",
+    "org.eclipse.jetty" % "jetty-webapp" % JettyVersion,
+    "org.eclipse.jetty" % "jetty-continuation" % JettyVersion,
+//    "org.eclipse.jetty" % "jetty-webapp" % JettyVersion % "container",
+//    "org.eclipse.jetty.websocket" % "websocket-server" % JettyVersion % "container;provided",
+    "org.eclipse.jetty.websocket" % "websocket-server" % JettyVersion,
+    "javax.servlet" % "javax.servlet-api" % "3.1.0" % "container;provided;test" artifacts Artifact("javax.servlet-api", "jar", "jar")
+
   )
 ).dependsOn(commonJVM)
-.enablePlugins(SbtTwirl)
-.enablePlugins(ScalatraPlugin)
+  .enablePlugins(SbtTwirl)
+  .enablePlugins(ScalatraPlugin)
 
 lazy val frontend = project
   .settings(
     commonSettings,
     scalaJSUseMainModuleInitializer := true,
     Seq(fullOptJS, fastOptJS, packageJSDependencies, packageMinifiedJSDependencies)
-        .map(task => crossTarget in (Compile, task) := file("static/content/target")),
+      .map(task => crossTarget in(Compile, task) := file("static/content/target")),
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.5",
       "com.github.japgolly.scalajs-react" %%% "core" % scalaJSReactVersion,
