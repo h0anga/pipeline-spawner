@@ -1,12 +1,15 @@
 import sbt.Keys.scalaVersion
 
-val Http4sVersion = "0.18.0"
+resolvers += Classpaths.typesafeReleases
+
+//val Http4sVersion = "0.18.0"
 val Specs2Version = "4.0.2"
 val LogbackVersion = "1.2.3"
 val CirceVersion = "0.9.1"
 val scalaJSReactVersion = "1.2.0"
 val scalaCssVersion = "0.5.5"
 val reactJSVersion = "15.6.2"
+val ScalatraVersion = "2.5.4"
 
 lazy val commonSettings = Seq(
   version := "0.0.1-SNAPSHOT",
@@ -25,9 +28,14 @@ lazy val backend = project.settings(
   assemblyJarName in assembly := s"pipeline-spawner-${version.value}.jar",
   unmanagedResourceDirectories in Compile += baseDirectory.value / ".." / "static",
   libraryDependencies ++= Seq(
-    "org.http4s"      %%  "http4s-blaze-server" % Http4sVersion,
-    "org.http4s"      %%  "http4s-circe"        % Http4sVersion,
-    "org.http4s"      %%  "http4s-dsl"          % Http4sVersion,
+//    "org.http4s"      %%  "http4s-blaze-server" % Http4sVersion,
+//    "org.http4s"      %%  "http4s-circe"        % Http4sVersion,
+//    "org.http4s"      %%  "http4s-dsl"          % Http4sVersion,
+    "org.scalatra" %% "scalatra" % ScalatraVersion,
+    "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % "test",
+    "ch.qos.logback" % "logback-classic" % "1.2.3" % "runtime",
+    "org.eclipse.jetty" % "jetty-webapp" % "9.2.19.v20160908" % "container",
+    "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
     "io.circe"        %%  "circe-generic"       % CirceVersion,
     "io.circe"        %%  "circe-literal"       % CirceVersion,
     "io.circe"        %%  "circe-parser"        % CirceVersion,
@@ -39,6 +47,8 @@ lazy val backend = project.settings(
     "io.fabric8"      %   "kubernetes-client"   % "3.1.8"
   )
 ).dependsOn(commonJVM)
+.enablePlugins(SbtTwirl)
+.enablePlugins(ScalatraPlugin)
 
 lazy val frontend = project
   .settings(

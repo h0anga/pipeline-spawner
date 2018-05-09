@@ -1,21 +1,16 @@
 package com.sky.ukiss.pipelinespawner
 
-import cats.effect.IO
-import org.http4s.HttpService
-import org.http4s.circe.jsonOf
-import org.http4s.dsl.Http4sDsl
+import org.scalatra.{BadRequest, Ok, ScalatraServlet}
 
-class GitHookServiceComponent(kube: KubernetesService) extends Http4sDsl[IO] {
+class GitHookServiceComponent(kube: KubernetesService) extends ScalatraServlet {
   import io.circe.generic.auto._
 
-  private implicit val payloadDecoder = jsonOf[IO, GitHookPayload]
-
-  lazy val service = HttpService[IO] {
-      case req @ POST -> Root / "hook" =>
-        for {
-          payload <- req.as[GitHookPayload]
-          submission <- IO { kube.onGitHook(payload) }
-          response <- Ok(s"We extracted the payload and it looks like this: $payload, and the result of the submission is $submission")
-        } yield response
+  post("/hook") {
+    io.circe.parser.decode[GitHookPayload](request.body) match {
+      case Right(payload) =>
+        val submission = kube.onGitHook(payload)
+        Ok(s"We extracted the payload and it looks like this: $payload, and the result of the submission is $submission")
+      case Left(err) => BadRequest(err)
     }
+  }
 }

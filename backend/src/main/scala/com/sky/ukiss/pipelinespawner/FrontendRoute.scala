@@ -1,19 +1,29 @@
 package com.sky.ukiss.pipelinespawner
 
-import cats.effect.IO
-import org.http4s.{HttpService, Request, StaticFile}
-import org.http4s.dsl.Http4sDsl
-import org.http4s.headers.Location
+import org.apache.commons.lang3.StringUtils
+import org.scalatra.{NotFound, ScalatraServlet}
 
-class FrontendRoute extends Http4sDsl[IO] {
-  lazy val service = HttpService[IO] {
-    case GET -> Root => PermanentRedirect(Location(uri("/static/content/index.html")))
-    case req @ GET -> "static" /: path =>
-      println(s"Getting static file at $path")
-      static(path.toString, req)
+import scala.io.Source
+
+class FrontendRoute extends ScalatraServlet {
+  get("/") {
+    redirect("/static/content/index.html")
   }
 
-  private def static(file: String, request: Request[IO]) =
-    StaticFile.fromResource(file, Some(request)).getOrElseF(NotFound())
+  get("/static/*") {
+    val resourcePath = getResourcePath
+    Option(servletContext.getResourceAsStream(resourcePath)) match {
+      case Some(inputStream) => Source.fromInputStream(inputStream).toArray
+      case None          => NotFound
+    }
+  }
 
+  private def getResourcePath =
+    if (StringUtils.isEmpty(splatPath)) {
+      request.getServletPath
+    } else {
+      request.getServletPath + "/" + splatPath
+    }
+
+  private def splatPath = multiParams("splat").head
 }
