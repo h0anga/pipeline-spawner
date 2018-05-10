@@ -2,7 +2,6 @@ import sbt.Keys.scalaVersion
 
 resolvers += Classpaths.typesafeReleases
 
-//val Http4sVersion = "0.18.0"
 val Specs2Version = "4.0.2"
 val LogbackVersion = "1.2.3"
 val CirceVersion = "0.9.1"
@@ -10,8 +9,8 @@ val scalaJSReactVersion = "1.2.0"
 val scalaCssVersion = "0.5.5"
 val reactJSVersion = "15.6.2"
 val ScalatraVersion = "2.5.4"
-//val JettyVersion = "9.4.6.v20170531"
 val JettyVersion = "9.2.22.v20170606"
+val PrickleVersion = "1.1.14"
 
 lazy val commonSettings = Seq(
   version := "0.0.1-SNAPSHOT",
@@ -21,8 +20,16 @@ lazy val commonSettings = Seq(
 )
 
 lazy val common = crossProject.crossType(CrossType.Pure)
-lazy val commonJS = common.js
-lazy val commonJVM = common.jvm
+lazy val commonJS = common.js.settings(
+  libraryDependencies ++= Seq(
+    "com.github.benhutchison" %%% "prickle" % PrickleVersion,
+  )
+)
+lazy val commonJVM = common.jvm.settings(
+  libraryDependencies ++= Seq(
+    "com.github.benhutchison" %% "prickle" % PrickleVersion,
+  )
+)
 
 lazy val backend = project.settings(
   commonSettings,
@@ -38,9 +45,9 @@ lazy val backend = project.settings(
     "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % Test,
     "ch.qos.logback" % "logback-classic" % "1.2.3" % "runtime",
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-    "io.circe" %% "circe-generic" % CirceVersion,
-    "io.circe" %% "circe-literal" % CirceVersion,
-    "io.circe" %% "circe-parser" % CirceVersion,
+//    "io.circe" %% "circe-generic" % CirceVersion,
+//    "io.circe" %% "circe-literal" % CirceVersion,
+//    "io.circe" %% "circe-parser" % CirceVersion,
     "org.json4s" %% "json4s-jackson" % "3.5.2",
     "org.log4s" %% "log4s" % "1.4.0",
     "org.specs2" %% "specs2-core" % Specs2Version % "test",
@@ -51,8 +58,6 @@ lazy val backend = project.settings(
     "org.eclipse.jetty" % "jetty-plus" % JettyVersion % "container;provided",
     "org.eclipse.jetty" % "jetty-webapp" % JettyVersion,
     "org.eclipse.jetty" % "jetty-continuation" % JettyVersion,
-//    "org.eclipse.jetty" % "jetty-webapp" % JettyVersion % "container",
-//    "org.eclipse.jetty.websocket" % "websocket-server" % JettyVersion % "container;provided",
     "org.eclipse.jetty.websocket" % "websocket-server" % JettyVersion,
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "container;provided;test" artifacts Artifact("javax.servlet-api", "jar", "jar")
 
@@ -73,8 +78,8 @@ lazy val frontend = project
       "com.github.japgolly.scalajs-react" %%% "extra" % scalaJSReactVersion,
       "com.github.japgolly.scalacss" %%% "core" % scalaCssVersion,
       "com.github.japgolly.scalacss" %%% "ext-react" % scalaCssVersion,
-      "io.circe" %%% "circe-parser" % CirceVersion,
-      "io.circe" %%% "circe-generic" % CirceVersion
+//      "io.circe" %%% "circe-parser" % CirceVersion,
+//      "io.circe" %%% "circe-generic" % CirceVersion
     ),
     jsDependencies ++= Seq(
       "org.webjars.npm" % "react" % reactJSVersion / "react-with-addons.js" commonJSName "React" minified "react-with-addons.min.js",

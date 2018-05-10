@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: countdown4
+  name: countdown4c
   namespace: mobile
 spec:
   template:

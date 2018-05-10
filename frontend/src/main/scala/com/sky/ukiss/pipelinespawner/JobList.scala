@@ -1,12 +1,14 @@
 package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.api._
-import io.circe.parser.decode
+//import io.circe.parser.decode
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, Callback, _}
 import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
+import prickle._
 
 import scala.scalajs.js
+import scala.util.{Failure, Success}
 
 object JobList {
 
@@ -22,17 +24,13 @@ object JobList {
     def allowSend: Boolean =
       ws.exists(_.readyState == WebSocket.OPEN) && message.nonEmpty
 
-    // Create a new state with a line added to the log
     def withMessage(line: String): State = {
-      import io.circe.generic.auto._
-      import io.circe.syntax._
       println(line)
-      decode[WsMessage](line) match {
-        case Right(WsMessage(JobCreated(job))) => println("job created: " + job); copy(jobs = jobs :+ job, error = None)
-        case Right(WsMessage(NoJobEvent)) => println("Received the initial job event"); this
-        case Right(WsMessage(Ping)) => ws.foreach(_.send(WsMessage(Pong).asJson.spaces2)); this
-        case Right(WsMessage(other)) => copy(error = Some(s"Unsupported event: $other"))
-        case Left(err) => copy(error = Some(err.getMessage))
+      Unpickle[JobEvent].fromString(line) match {
+        case Success(JobCreated(job)) => println("job created: " + job); copy(jobs = jobs :+ job, error = None)
+        case Success(NoJobEvent) => println("Received the initial job event"); this
+        case Success(other) => copy(error = Some(s"Unsupported event: $other"))
+        case Failure(err) => copy(error = Some(err.getMessage))
       }
     }
   }
