@@ -1,11 +1,10 @@
 package com.sky.ukiss.pipelinespawner
 
-import com.sky.ukiss.pipelinespawner.api.{JobCreated, WsMessage, Job => JobData}
+import com.sky.ukiss.pipelinespawner.api.{JobCreated, Job => JobData}
 import io.fabric8.kubernetes.api.model.Job
 import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
-import org.json4s.{DefaultFormats, Extraction, Formats}
-import org.scalatra.atmosphere.{AtmosphereClient, JsonMessage, TextMessage}
+import org.scalatra.atmosphere.{AtmosphereClient, TextMessage}
 import org.slf4j.LoggerFactory
 import prickle.Pickle
 
