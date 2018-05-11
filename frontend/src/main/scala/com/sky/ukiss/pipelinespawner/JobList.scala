@@ -82,7 +82,7 @@ object JobList {
 
         def onopen(e: Event): Unit = {
           // Indicate the connection is open
-          direct.modState(s => s) // this is basically a noop, but it I don't do it, it doesn't work.
+          direct.modState(s => {s.ws.foreach(_.send("Hello")); s})
         }
 
         def onmessage(e: MessageEvent): Unit = direct.modState(_.withMessage(e.data.toString))

@@ -1,10 +1,9 @@
 package com.sky.ukiss.pipelinespawner
 
-import com.sky.ukiss.pipelinespawner.api.{JobCreated, Job => JobData}
+import com.sky.ukiss.pipelinespawner.api.{JobChanged, JobCreated, JobDeleted, JobId, Job => JobData}
 import io.fabric8.kubernetes.api.model.Job
 import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
-import org.scalatra.atmosphere.{AtmosphereClient, TextMessage}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -12,19 +11,23 @@ import scala.collection.mutable
 
 class JobEvents(client: KubernetesClient,
                 namespace: String,
+                broadcaster: JobEventBroadcaster
                ) {
   private val logger = LoggerFactory.getLogger(this.getClass)
-  private val jobsCell: mutable.Set[JobData] = mutable.Set()
+  private val currentJobs: mutable.Map[JobId, JobData] = mutable.Map()
 
-  private def jobs = jobsCell.seq
+  def getCurrentJobs: Iterable[JobData] = currentJobs.values.seq
+
+  private def convertToJobData(j: Job) = JobData(j.getMetadata.getName, j.getMetadata.getLabels.get("app_name"))
 
   logger.info("Getting initial jobs")
 
-  jobs ++= client.extensions().jobs()
+  currentJobs ++= client.extensions().jobs()
     .inNamespace(namespace)
     .list().getItems.asScala
-    .map((j: Job) => JobData(j.getMetadata.getName, j.getMetadata.getLabels.get("app_name")))
-    .toSet
+    .map(convertToJobData)
+    .map(data => (data.id, data))
+    .toMap
 
   logger.info("Registering watcher with Kubernetes")
 
@@ -32,21 +35,21 @@ class JobEvents(client: KubernetesClient,
     override def onClose(cause: KubernetesClientException): Unit = ???
 
     override def eventReceived(action: Watcher.Action, job: Job): Unit = {
-      val name = job.getMetadata.getName
-      logger.info("Job changed: " + name)
-      val labels = job.getMetadata.getLabels
-      val jobData = JobData(name, labels.get("app_name"))
+      val jobData = convertToJobData(job)
 
       action match {
-        case ADDED | MODIFIED => jobs += jobData
-        case DELETED => jobs -= jobData
+        case ADDED|MODIFIED =>
+          currentJobs(jobData.id) = jobData
+          if (action == ADDED)
+            broadcaster.broadcast(JobCreated(jobData))
+          else
+            broadcaster.broadcast(JobChanged(jobData))
+        case DELETED =>
+          currentJobs.remove(jobData.id)
+          broadcaster.broadcast(JobDeleted(jobData.id))
         case ERROR => logger.error("error about job events", job)
       }
 
-      import scala.concurrent.ExecutionContext.Implicits.global
-
-      AtmosphereClient.broadcastAll(TextMessage(JobCreated(jobData).asJson))
     }
   })
-
 }

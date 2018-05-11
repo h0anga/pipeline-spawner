@@ -2,13 +2,11 @@ package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
 import io.fabric8.kubernetes.api.model._
-import org.log4s
 
 import scala.collection.JavaConverters._
 
 class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => Job) {
 
-  private val log = log4s.getLogger
   private val repo = "repo.sns.sky.com:8186"
   private val version = "0.1.5"
   private val buildImage = s"$repo/dost/pipeline-build:$version"
@@ -46,8 +44,6 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
       "bash", "-c",
       s"git clone $cloneUrl application && cd application/pipeline && git checkout $commit && make build push"
     ).asJava)
-
-    log.info(s"Converted $hook into $job")
 
     job
   }
