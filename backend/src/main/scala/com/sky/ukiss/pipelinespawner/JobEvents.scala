@@ -6,7 +6,6 @@ import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
 import org.scalatra.atmosphere.{AtmosphereClient, TextMessage}
 import org.slf4j.LoggerFactory
-import prickle.Pickle
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -44,11 +43,9 @@ class JobEvents(client: KubernetesClient,
         case ERROR => logger.error("error about job events", job)
       }
 
-//      implicit val formats: Formats = DefaultFormats
       import scala.concurrent.ExecutionContext.Implicits.global
-      val theMessage = Pickle.intoString(JobCreated(jobData))
 
-      AtmosphereClient.broadcastAll(TextMessage(theMessage))
+      AtmosphereClient.broadcastAll(TextMessage(JobCreated(jobData).asJson))
     }
   })
 

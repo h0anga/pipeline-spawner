@@ -1,11 +1,9 @@
 package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.api._
-//import io.circe.parser.decode
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.{BackendScope, Callback, _}
 import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
-import prickle._
 
 import scala.scalajs.js
 import scala.util.{Failure, Success}
@@ -18,53 +16,28 @@ object JobList {
                     ws: Option[WebSocket], // TODO open websocket when component is created, and assume it's always there?
                     jobs: Vector[Job],
                     error: Option[String],
-                    message: String, // TODO to be removed when integration with backend works
                     displayedJob: Option[Job] = None
                   ) {
-    def allowSend: Boolean =
-      ws.exists(_.readyState == WebSocket.OPEN) && message.nonEmpty
 
     def withMessage(line: String): State = {
       println(line)
-      Unpickle[JobEvent].fromString(line) match {
+      if (line == "X") return this // TODO why is this happening??? We're getting an X from the WebSocket!!!
+      JobEvent.fromString(line) match {
         case Success(JobCreated(job)) => println("job created: " + job); copy(jobs = jobs :+ job, error = None)
         case Success(NoJobEvent) => println("Received the initial job event"); this
         case Success(other) => copy(error = Some(s"Unsupported event: $other"))
-        case Failure(err) => copy(error = Some(err.getMessage))
+        case Failure(err) => copy(error = Some(
+          s"""The message "$line" caused the following error: "${err.getMessage}".
+         Here's the stack trace:
+         ${err.getStackTrace.map(_.toString).mkString("\n")}"""
+        ))
       }
     }
   }
 
   class Backend($: BackendScope[Props, State]) {
     def render(s: State) = {
-
-      // Can only send if WebSocket is connected and user has entered text
-      val send: Option[Callback] =
-        for (ws <- s.ws if s.allowSend)
-          yield sendMessage(ws, s.message)
-
-      def handleSubmit(e: ReactEventFromInput) = send.map(e.preventDefaultCB >> _)
-
       <.div(
-        <.p("Enter a Job in Json format and watch it rendered in the list below:"),
-        <.form(
-          ^.className := "form-inline",
-          ^.onSubmit ==>? handleSubmit
-        )(
-          <.div(
-            ^.className := "form-group",
-            <.input.text(
-              ^.className := "form-control",
-              ^.autoFocus := true,
-              ^.value := s.message,
-              ^.onChange ==> onChange
-            )
-          ),
-          <.button(
-            ^.classSet("btn" -> true, "btn-primary" -> true),
-            ^.disabled := send.isEmpty, // Disable button if unable to send
-            "Send")
-        ),
         <.table(
           ^.className := "table table-striped table-hover"
         )(
@@ -101,13 +74,6 @@ object JobList {
         }
       )
     }
-
-    private def onChange(e: ReactEventFromInput) = {
-      val newMessage = e.target.value // NB don't inline `newMessage`, or it will stop working
-      $.modState(_.copy(message = newMessage))
-    }
-
-    private def sendMessage(ws: WebSocket, msg: String) = Callback(ws.send(msg)) >> $.modState(s => s.copy(message = ""))
 
     def start(p: Props): Callback = {
       // This will establish the connection and return the WebSocket
@@ -158,7 +124,7 @@ object JobList {
   }
 
   def Component = ScalaComponent.builder[Props]("Jobs")
-    .initialState(State(None, Vector.empty, None, """{ "id" : 0, "name" : "MyJob" }"""))
+    .initialState(State(None, Vector.empty, None))
     .renderBackend[Backend]
     .componentDidMount($ => $.backend.start($.props))
     .componentWillUnmount(_.backend.end)

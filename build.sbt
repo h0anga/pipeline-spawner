@@ -45,9 +45,9 @@ lazy val backend = project.settings(
     "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % Test,
     "ch.qos.logback" % "logback-classic" % "1.2.3" % "runtime",
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-//    "io.circe" %% "circe-generic" % CirceVersion,
-//    "io.circe" %% "circe-literal" % CirceVersion,
-//    "io.circe" %% "circe-parser" % CirceVersion,
+    "io.circe" %% "circe-generic" % CirceVersion,
+    "io.circe" %% "circe-literal" % CirceVersion,
+    "io.circe" %% "circe-parser" % CirceVersion,
     "org.json4s" %% "json4s-jackson" % "3.5.2",
     "org.log4s" %% "log4s" % "1.4.0",
     "org.specs2" %% "specs2-core" % Specs2Version % "test",
@@ -78,8 +78,6 @@ lazy val frontend = project
       "com.github.japgolly.scalajs-react" %%% "extra" % scalaJSReactVersion,
       "com.github.japgolly.scalacss" %%% "core" % scalaCssVersion,
       "com.github.japgolly.scalacss" %%% "ext-react" % scalaCssVersion,
-//      "io.circe" %%% "circe-parser" % CirceVersion,
-//      "io.circe" %%% "circe-generic" % CirceVersion
     ),
     jsDependencies ++= Seq(
       "org.webjars.npm" % "react" % reactJSVersion / "react-with-addons.js" commonJSName "React" minified "react-with-addons.min.js",
