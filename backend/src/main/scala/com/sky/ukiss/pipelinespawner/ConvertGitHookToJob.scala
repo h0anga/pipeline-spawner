@@ -1,6 +1,11 @@
 package com.sky.ukiss.pipelinespawner
 
+import java.time.format.DateTimeFormatter
+import java.time.{Instant, LocalDateTime, ZoneId}
+
 import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
+import com.sky.ukiss.pipelinespawner.utils.Utils
+import com.sky.ukiss.pipelinespawner.utils.Utils._
 import io.fabric8.kubernetes.api.model._
 
 import scala.collection.JavaConverters._
@@ -11,6 +16,8 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
   private val version = "0.1.5"
   private val buildImage = s"$repo/dost/pipeline-build:$version"
   private val myName = "pipeline-spawner"
+
+
 
   override def apply(hook: GitHookPayload): Job = {
     val metadata = new ObjectMeta()
@@ -35,6 +42,7 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
     podSpec.setRestartPolicy("Never")
     podSpec.setContainers(List(container).asJava)
 
+    container.setEnv(List(artifactoryUserName, artifactoryPassword, goPipelineLabel).asJava)
     container.setImage(buildImage)
     container.setName("build")
 
@@ -47,4 +55,22 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
 
     job
   }
+
+  private val artifactoryUserName = new EnvVar(
+    "ARTIFACTORY_USERNAME",
+    Config().getString("pipeline-spawner.artifactoryUsername"),
+    null)
+
+  private val artifactoryPassword = new EnvVar(
+    "ARTIFACTORY_PASSWORD",
+    Config().getString("pipeline-spawner.artifactoryPassword"),
+    null)
+
+  private def goPipelineLabel = {
+    val goPipelineLabel = new EnvVar()
+    goPipelineLabel.setName("GO_PIPELINE_LABEL")
+    goPipelineLabel.setValue(formattedTimestamp(Instant.now()))
+    goPipelineLabel
+  }
 }
+
