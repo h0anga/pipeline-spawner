@@ -23,7 +23,7 @@ class WebSocketComponent(jobEvents: JobEvents) extends ScalatraServlet
 
   atmosphere("/") {
     new AtmosphereClient {
-      def receive = {
+      def receive: PartialFunction[InboundMessage, Unit] = {
         case Connected =>
         case Disconnected(disconnector, Some(error)) =>
         case Error(Some(error)) => log.error(error.toString)
@@ -31,13 +31,14 @@ class WebSocketComponent(jobEvents: JobEvents) extends ScalatraServlet
         case JsonMessage(json) => log.warn("Unexpected message from client: " + json)
       }
 
-      private def sendInitialJobs() = {
+      private def sendInitialJobs(): Unit = {
         jobEvents.getCurrentJobs.
-          map(JobCreated).
+          map(jobEvent => JobCreated(jobEvent._1, jobEvent._2)).
           map(_.asJson).
           map(TextMessage).
           foreach(send)
       }
+
     }
   }
 

@@ -1,13 +1,13 @@
 package com.sky.ukiss.pipelinespawner
 
-import com.sky.ukiss.pipelinespawner.api.{Job, JobCreated, JobEvent}
+import com.sky.ukiss.pipelinespawner.api.{JobCreated, JobData, JobEvent}
 import org.specs2.mutable.Specification
 
 class ApiTest extends Specification {
   args(sequential = true)
 
   "The JobEvent should" >> {
-    val jobEvent = JobCreated(Job("123", "foobar"))
+    val jobEvent = JobCreated("123", JobData("123", "foobar"))
 
     var serialized: String = ""
 

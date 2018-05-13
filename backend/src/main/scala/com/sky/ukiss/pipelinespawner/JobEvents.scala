@@ -1,6 +1,6 @@
 package com.sky.ukiss.pipelinespawner
 
-import com.sky.ukiss.pipelinespawner.api.{JobChanged, JobCreated, JobDeleted, JobId, Job => JobData}
+import com.sky.ukiss.pipelinespawner.api.{JobChanged, JobCreated, JobData, JobDeleted, JobId}
 import io.fabric8.kubernetes.api.model.Job
 import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
@@ -16,7 +16,8 @@ class JobEvents(client: KubernetesClient,
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val currentJobs: mutable.Map[JobId, JobData] = mutable.Map()
 
-  def getCurrentJobs: Iterable[JobData] = currentJobs.values.seq
+
+  def getCurrentJobs: mutable.Map[JobId, JobData] = currentJobs
 
   private def convertToJobData(j: Job) = JobData(j.getMetadata.getName, j.getMetadata.getLabels.get("app_name"))
 
@@ -40,10 +41,11 @@ class JobEvents(client: KubernetesClient,
       action match {
         case ADDED|MODIFIED =>
           currentJobs(jobData.id) = jobData
+          val jobId: JobId = jobData.id
           if (action == ADDED)
-            broadcaster.broadcast(JobCreated(jobData))
+            broadcaster.broadcast(JobCreated(jobId, jobData))
           else
-            broadcaster.broadcast(JobChanged(jobData))
+            broadcaster.broadcast(JobChanged(jobId, jobData))
         case DELETED =>
           currentJobs.remove(jobData.id)
           broadcaster.broadcast(JobDeleted(jobData.id))

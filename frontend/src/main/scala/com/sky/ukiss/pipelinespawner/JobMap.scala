@@ -8,23 +8,23 @@ import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
 import scala.scalajs.js
 import scala.util.{Failure, Success}
 
-object JobList {
+object JobMap {
 
   case class Props(url: String)
 
   case class State(
                     ws: Option[WebSocket], // TODO open websocket when component is created, and assume it's always there?
-                    jobs: Vector[Job],
+                    jobs: Map[JobId, JobData],
                     error: Option[String],
-                    displayedJob: Option[Job] = None
+                    displayedJob: Option[(JobId, JobData)] = None
                   ) {
 
     def withMessage(line: String): State = {
       println(line)
       if (line == "X") return this // TODO why is this happening??? We're getting an X from the WebSocket!!!
       JobEvent.fromString(line) match {
-        case Success(JobCreated(job)) => println("job created: " + job); copy(jobs = jobs :+ job, error = None)
-        case Success(NoJobEvent) => println("Received the initial job event"); this
+        case Success(JobCreated(id, job)) => println("job created: " + job); copy(jobs = jobs + (id -> job), error = None)
+        case Success(NoJobEvent$) => println("Received the initial job event"); this
         case Success(other) => copy(error = Some(s"Unsupported event: $other"))
         case Failure(err) => copy(error = Some(
           s"""The message "$line" caused the following error: "${err.getMessage}".
@@ -37,6 +37,21 @@ object JobList {
 
   class Backend($: BackendScope[Props, State]) {
     def render(s: State) = {
+
+      def jobContent(j: (JobId, JobData)) = {
+          s.displayedJob.filter(_._1 == j._1).map(displayedJob =>
+            <.tr(
+              <.td(
+                ^.colSpan := 2
+              )(JobInfo.Component(displayedJob))
+            )
+          ).getOrElse(
+            <.tr(
+              <.td(j._1), <.td(j._2.name)
+            )
+          )
+      }
+
       <.div(
         <.table(
           ^.className := "table table-striped table-hover"
@@ -47,19 +62,7 @@ object JobList {
             )
           ),
           <.tbody(
-            s.jobs.map(j => {
-              s.displayedJob.filter(_.id == j.id).map(displayedJob =>
-                <.tr(
-                  <.td(
-                    ^.colSpan := 2
-                  )(JobInfo.Component(displayedJob))
-                )
-              ).getOrElse(
-                <.tr(
-                  <.td(j.id), <.td(j.name)
-                )
-              )
-            }): _*
+            s.jobs.map(j => jobContent(j)).toVector : _*
           )
         ),
         if (s.error.isDefined) {
@@ -124,7 +127,7 @@ object JobList {
   }
 
   def Component = ScalaComponent.builder[Props]("Jobs")
-    .initialState(State(None, Vector.empty, None))
+    .initialState(State(None, Map.empty, None))
     .renderBackend[Backend]
     .componentDidMount($ => $.backend.start($.props))
     .componentWillUnmount(_.backend.end)
