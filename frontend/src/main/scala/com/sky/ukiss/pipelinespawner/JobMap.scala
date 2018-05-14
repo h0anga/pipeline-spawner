@@ -1,7 +1,7 @@
 package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.api._
-import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.vdom.html_<^.{<, _}
 import japgolly.scalajs.react.{BackendScope, Callback, _}
 import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
 
@@ -37,6 +37,11 @@ object JobMap {
   }
 
   class Backend($: BackendScope[Props, State]) {
+
+    def onButtonPressed(msg: String): Callback =
+      Callback.alert(s"$msg")
+
+
     def render(s: State) = {
 
       def jobContent(j: (JobId, JobData)) = {
@@ -48,9 +53,12 @@ object JobMap {
             )
           ).getOrElse(
             <.tr(
-              <.td(j._1), <.td(j._2.appName), <.td(
-                ^.color := "navy")
-                (j._2.status)
+              <.td(j._1), <.td(j._2.appName), <.td
+              (if (j._2.status == "Failed") ^.color := "red"
+              else ^.color := "black")
+                (j._2.status), <.td (<.button(
+              ^.onClick --> onButtonPressed(j._2.podLogs),
+              "I"))
             )
           )
       }
@@ -61,7 +69,7 @@ object JobMap {
         )(
           <.thead(
             <.tr(
-              <.th("ID"), <.th("Application Name"), <.th("Status")
+              <.th("ID"), <.th("Application Name"), <.th("Status"), <.th("Details")
             )
           ),
           <.tbody(

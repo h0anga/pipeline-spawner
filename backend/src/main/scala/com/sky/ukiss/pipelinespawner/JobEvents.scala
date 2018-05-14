@@ -1,7 +1,8 @@
 package com.sky.ukiss.pipelinespawner
 
+import com.sky.ukiss.pipelinespawner.JobStatus.{Active, Failed, Succeeded}
 import com.sky.ukiss.pipelinespawner.api.{JobChanged, JobCreated, JobData, JobDeleted, JobId}
-import io.fabric8.kubernetes.api.model.Job
+import io.fabric8.kubernetes.api.model.{Job, LabelSelector}
 import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
 import org.slf4j.LoggerFactory
@@ -19,19 +20,34 @@ class JobEvents(client: KubernetesClient,
 
   def getCurrentJobs: mutable.Map[JobId, JobData] = currentJobs
 
-  private def convertToJobData(j: Job) =
+  private def convertToJobData(j: Job) = {
+    val jobName = j.getMetadata.getName
     JobData(
-      j.getMetadata.getName,
+      jobName,
       j.getMetadata.getLabels.get("app_name"),
-      jobStatus(j)
+      jobStatus(j),
+      podLogs(jobName)
     )
+  }
 
   private def jobStatus(j: Job) = {
     val status = j.getStatus
-    if (status.getActive == 1) "Active"
-    else if (status.getFailed == 1) "Failed"
-    else if (status.getSucceeded == 1) "Succeeded"
+    if (status.getActive == 1) Active.toString
+    else if (status.getFailed == 1) Failed.toString
+    else if (status.getSucceeded == 1) Succeeded.toString
     else "Unexpected job status"
+  }
+
+  private def podLogs(jobName: String) = {
+    val labelSelector = new LabelSelector
+    labelSelector.setMatchLabels(Map("job-name" -> jobName).asJava)
+
+    val podNames = client.pods.withLabelSelector(labelSelector).list
+      .getItems.asScala.map(p => p.getMetadata.getName)
+
+    podNames
+      .map(podName => s"$podName :\n ${client.pods.withName(podName).getLog}")
+      .mkString("\n\n")
   }
 
   logger.info("Getting initial jobs")
