@@ -23,7 +23,7 @@ package object api {
 
   case class JobDeleted(id: JobId) extends JobEvent
 
-  private implicit val messagePickler1: PicklerPair[JobEvent] = CompositePickler[JobEvent]
+  private implicit val messagePickler: PicklerPair[JobEvent] = CompositePickler[JobEvent]
     .concreteType[NoJobEvent$.type]
     .concreteType[JobCreated]
     .concreteType[JobChanged]

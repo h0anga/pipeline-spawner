@@ -24,6 +24,7 @@ object JobMap {
       if (line == "X") return this // TODO why is this happening??? We're getting an X from the WebSocket!!!
       JobEvent.fromString(line) match {
         case Success(JobCreated(id, job)) => println("job created: " + job); copy(jobs = jobs + (id -> job), error = None)
+        case Success(JobChanged(id, job)) => println("job updated: " + job); copy(jobs = jobs + (id -> job), error = None)
         case Success(NoJobEvent$) => println("Received the initial job event"); this
         case Success(other) => copy(error = Some(s"Unsupported event: $other"))
         case Failure(err) => copy(error = Some(
@@ -47,7 +48,9 @@ object JobMap {
             )
           ).getOrElse(
             <.tr(
-              <.td(j._1), <.td(j._2.name)
+              <.td(j._1), <.td(j._2.appName), <.td(
+                ^.color := "navy")
+                (j._2.status)
             )
           )
       }
@@ -58,7 +61,7 @@ object JobMap {
         )(
           <.thead(
             <.tr(
-              <.th("ID"), <.th("Name")
+              <.th("ID"), <.th("Application Name"), <.th("Status")
             )
           ),
           <.tbody(

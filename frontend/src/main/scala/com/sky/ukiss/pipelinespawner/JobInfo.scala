@@ -3,12 +3,13 @@ package com.sky.ukiss.pipelinespawner
 import com.sky.ukiss.pipelinespawner.api.{JobData, JobId}
 import japgolly.scalajs.react
 import japgolly.scalajs.react.vdom.html_<^._
+import org.scalajs.dom.html.Div
 
 object JobInfo {
   type Props = (JobId, JobData)
   type State = Unit
 
-  def render(state: State, props: Props) = {
+  def render(state: State, props: Props): VdomTagOf[Div] = {
     <.div(
       <.h1(
         ^.className := "display-1"
@@ -16,7 +17,7 @@ object JobInfo {
       <.p(
         ^.className := "lead"
       )(
-        props._2.name
+        props._2.appName
       ),
       <.div(
         <.pre(

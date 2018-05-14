@@ -7,14 +7,14 @@ class ApiTest extends Specification {
   args(sequential = true)
 
   "The JobEvent should" >> {
-    val jobEvent = JobCreated("123", JobData("123", "foobar"))
+    val jobEvent = JobCreated("123", JobData("123", "foobar", "created"))
 
     var serialized: String = ""
 
     "be serializable to string" >> {
       serialized = jobEvent.asJson
       println("in serialisation test: " + serialized)
-      serialized must contain("foobar") and contain("123")
+      serialized must contain("foobar") and contain("123") and contain("created")
     }
 
     "be deserializable from string" >> {
@@ -25,6 +25,10 @@ class ApiTest extends Specification {
         parsedEvent.get must haveClass[JobCreated]
       ) and (
         parsedEvent.get.asInstanceOf[JobCreated].job.id must_== "123"
+        )and (
+        parsedEvent.get.asInstanceOf[JobCreated].job.appName must_== "foobar"
+        )and (
+        parsedEvent.get.asInstanceOf[JobCreated].job.status must_== "created"
         )
     }
   }

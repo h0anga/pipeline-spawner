@@ -19,7 +19,20 @@ class JobEvents(client: KubernetesClient,
 
   def getCurrentJobs: mutable.Map[JobId, JobData] = currentJobs
 
-  private def convertToJobData(j: Job) = JobData(j.getMetadata.getName, j.getMetadata.getLabels.get("app_name"))
+  private def convertToJobData(j: Job) =
+    JobData(
+      j.getMetadata.getName,
+      j.getMetadata.getLabels.get("app_name"),
+      jobStatus(j)
+    )
+
+  private def jobStatus(j: Job) = {
+    val status = j.getStatus
+    if (status.getActive == 1) "Active"
+    else if (status.getFailed == 1) "Failed"
+    else if (status.getSucceeded == 1) "Succeeded"
+    else "Unexpected job status"
+  }
 
   logger.info("Getting initial jobs")
 
