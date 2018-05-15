@@ -29,4 +29,20 @@ package object api {
     .concreteType[JobChanged]
     .concreteType[JobDeleted]
 
+  sealed trait JobStatus
+
+  case object Active extends JobStatus
+
+  case object Succeeded extends JobStatus
+
+  case object Failed extends JobStatus
+
+  case object Unknown extends JobStatus
+
+  private implicit val jobStatusPickler: PicklerPair[JobStatus] = CompositePickler[JobStatus]
+    .concreteType[Succeeded.type]
+    .concreteType[Active.type]
+    .concreteType[Failed.type]
+    .concreteType[Unknown.type]
+
 }

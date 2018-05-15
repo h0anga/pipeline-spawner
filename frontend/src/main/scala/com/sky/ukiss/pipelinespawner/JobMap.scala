@@ -64,12 +64,12 @@ object JobMap {
             <.td(j._2.appName),
             <.td(
               ^.classSet(
-                "text-success" -> (status == "Succeeded"),
-                "text-danger" -> (status == "Failed"),
-                "text-warning" -> (status == "Running")
+                "text-success" -> (status == Succeeded),
+                "text-danger" -> (status == Failed),
+                "text-warning" -> (status == Active)
               )
             )
-            (status),
+            (status.toString),
             <.td(
               <.button(
                 ^.`type` := "button",

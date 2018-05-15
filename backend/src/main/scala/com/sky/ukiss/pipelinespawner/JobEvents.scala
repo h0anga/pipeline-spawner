@@ -1,7 +1,6 @@
 package com.sky.ukiss.pipelinespawner
 
-import com.sky.ukiss.pipelinespawner.JobStatus.{Active, Failed, Succeeded}
-import com.sky.ukiss.pipelinespawner.api.{JobChanged, JobCreated, JobData, JobDeleted, JobId}
+import com.sky.ukiss.pipelinespawner.api.{Active, Failed, JobChanged, JobCreated, JobData, JobDeleted, JobId, Succeeded, Unknown}
 import io.fabric8.kubernetes.api.model.{Job, LabelSelector}
 import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
@@ -32,10 +31,10 @@ class JobEvents(client: KubernetesClient,
 
   private def jobStatus(j: Job) = {
     val status = j.getStatus
-    if (status.getActive == 1) Active.toString
-    else if (status.getFailed == 1) Failed.toString
-    else if (status.getSucceeded == 1) Succeeded.toString
-    else "Unexpected job status"
+    if (status.getActive == 1) Active
+    else if (status.getFailed == 1) Failed
+    else if (status.getSucceeded == 1) Succeeded
+    else Unknown
   }
 
   private def podLogs(jobName: String) = {
