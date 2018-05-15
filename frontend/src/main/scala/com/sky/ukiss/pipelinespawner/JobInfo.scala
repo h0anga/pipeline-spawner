@@ -11,8 +11,8 @@ object JobInfo {
 
   def render(state: State, props: Props): VdomTagOf[Div] = {
     <.div(
-      <.h1(
-        ^.className := "display-1"
+      <.h3(
+        ^.className := "display-3"
       )(s"Job ${props._1}"),
       <.p(
         ^.className := "lead"
@@ -20,12 +20,7 @@ object JobInfo {
         props._2.appName
       ),
       <.div(
-        <.pre(
-          """
-            |Ideally, job output will be printed here.
-            |Lorem ipsum dolor sit abet. Ex falso quod libet.
-          """.stripMargin
-        )
+        <.pre(props._2.podLogs)
       )
     )
   }

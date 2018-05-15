@@ -1,7 +1,7 @@
 package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.api._
-import japgolly.scalajs.react.vdom.html_<^.{<, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
 import japgolly.scalajs.react.{BackendScope, Callback, _}
 import org.scalajs.dom.{CloseEvent, Event, MessageEvent, WebSocket}
 
@@ -38,29 +38,49 @@ object JobMap {
 
   class Backend($: BackendScope[Props, State]) {
 
-    def onButtonPressed(msg: String): Callback =
-      Callback.alert(s"$msg")
-
-
     def render(s: State) = {
 
       def jobContent(j: (JobId, JobData)) = {
-          s.displayedJob.filter(_._1 == j._1).map(displayedJob =>
-            <.tr(
-              <.td(
-                ^.colSpan := 2
-              )(JobInfo.Component(displayedJob))
-            )
-          ).getOrElse(
-            <.tr(
-              <.td(j._1), <.td(j._2.appName), <.td
-              (if (j._2.status == "Failed") ^.color := "red"
-              else ^.color := "black")
-                (j._2.status), <.td (<.button(
-              ^.onClick --> onButtonPressed(j._2.podLogs),
-              "I"))
+        val status = j._2.status
+
+        s.displayedJob.filter(_._1 == j._1).map(displayedJob =>
+          <.tr(
+            <.td(
+              ^.colSpan := 3
+            )(JobInfo.Component(displayedJob)),
+            <.td(
+              <.button(
+                ^.`type` := "button",
+                ^.className := "btn btn-primary"
+              )(
+                ^.onClick --> $.modState(s => s.copy(displayedJob = None)),
+                info
+              )
             )
           )
+        ).getOrElse(
+          <.tr(
+            <.td(j._1),
+            <.td(j._2.appName),
+            <.td(
+              ^.classSet(
+                "text-success" -> (status == "Succeeded"),
+                "text-danger" -> (status == "Failed"),
+                "text-warning" -> (status == "Running")
+              )
+            )
+            (status),
+            <.td(
+              <.button(
+                ^.`type` := "button",
+                ^.className := "btn btn-outline-primary"
+              )(
+                ^.onClick --> $.modState(s => s.copy(displayedJob = Some((j._1, j._2)))),
+                info
+              )
+            )
+          )
+        )
       }
 
       <.div(
@@ -69,11 +89,11 @@ object JobMap {
         )(
           <.thead(
             <.tr(
-              <.th("ID"), <.th("Application Name"), <.th("Status"), <.th("Details")
+              <.th("ID"), <.th("Application Name"), <.th("Status"), <.th("")
             )
           ),
           <.tbody(
-            s.jobs.map(j => jobContent(j)).toVector : _*
+            s.jobs.map(j => jobContent(j)).toVector: _*
           )
         ),
         if (s.error.isDefined) {
@@ -89,6 +109,10 @@ object JobMap {
       )
     }
 
+    private def info = {
+      <.i(^.className := "fas fa-info-circle")
+    }
+
     def start(p: Props): Callback = {
       // This will establish the connection and return the WebSocket
       def connect = CallbackTo[WebSocket] {
@@ -96,7 +120,10 @@ object JobMap {
 
         def onopen(e: Event): Unit = {
           // Indicate the connection is open
-          direct.modState(s => {s.ws.foreach(_.send("Hello")); s})
+          direct.modState(s => {
+            s.ws.foreach(_.send("Hello"));
+            s
+          })
         }
 
         def onmessage(e: MessageEvent): Unit = direct.modState(_.withMessage(e.data.toString))
