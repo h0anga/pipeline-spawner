@@ -43,7 +43,6 @@ lazy val backend = project.settings(
     "org.scalatra" %% "scalatra-json" % ScalatraVersion,
     "org.scalatra" %% "scalatra-specs2" % ScalatraVersion % Test,
     "org.scalatra" %% "scalatra-scalatest" % ScalatraVersion % Test,
-    "ch.qos.logback" % "logback-classic" % "1.2.3" % "runtime",
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
     "io.circe" %% "circe-generic" % CirceVersion,
     "io.circe" %% "circe-literal" % CirceVersion,
