@@ -2,7 +2,7 @@ package com.sky.ukiss.pipelinespawner
 
 import java.time.Clock
 
-import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
+import com.sky.ukiss.pipelinespawner.hooks.GithubPayload
 import com.sky.ukiss.pipelinespawner.utils.Utils._
 import io.fabric8.kubernetes.api.model._
 
@@ -11,14 +11,14 @@ import scala.collection.JavaConverters._
 class ConvertGitHookToJob(generateId: () => String,
                           clock: Clock,
                           artifactoryUserName: String,
-                          artifactoryPassword: String) extends (GitHookPayload => Job) {
+                          artifactoryPassword: String) extends (GithubPayload => Job) {
 
   private val repo = "repo.sns.sky.com:8186"
   private val version = "0.1.5"
   private val buildImage = s"$repo/dost/pipeline-build:$version"
   private val myName = "pipeline-spawner"
 
-  override def apply(hook: GitHookPayload): Job = {
+  override def apply(hook: GithubPayload): Job = {
     val metadata = new ObjectMeta()
     val id = generateId()
     metadata.setName(s"$myName-$id")
@@ -45,7 +45,7 @@ class ConvertGitHookToJob(generateId: () => String,
     container.setImage(buildImage)
     container.setName("build")
 
-    val cloneUrl = hook.project.git_http_url
+    val cloneUrl = hook.project.map(_.git_http_url).getOrElse(hook.repository.url)
     val commit = hook.after
     container.setCommand(List(
       "bash", "-c",

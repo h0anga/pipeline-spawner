@@ -2,7 +2,7 @@ package com.sky.ukiss.pipelinespawner
 
 import java.time.{Clock, Instant}
 
-import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
+import com.sky.ukiss.pipelinespawner.hooks.GithubPayload
 import io.circe.generic.auto._
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
@@ -12,8 +12,8 @@ import scala.collection.JavaConverters
 import scala.io.Source
 
 class ConvertGitHookToJobTest extends Specification with MockitoSugar {
-  lazy val payload = Source.fromResource("git-hook.json").mkString
-  lazy val hook: GitHookPayload = io.circe.parser.parse(payload).flatMap(_.as[GitHookPayload]).getOrElse(???)
+  val payload = Source.fromResource("github-hook.json").mkString
+  val hook: GithubPayload = io.circe.parser.parse(payload).flatMap(_.as[GithubPayload]).getOrElse(???)
 
   val username = "foo"
   val password = "bar"
@@ -26,7 +26,7 @@ class ConvertGitHookToJobTest extends Specification with MockitoSugar {
     lazy val converter = new ConvertGitHookToJob(() => "id", clock, username, password)
 
     "The payload can be parsed from JSON" >> {
-      hook.project.homepage must_== "http://example.com/mike/diaspora"
+      hook.project.get.homepage must_== "http://example.com/mike/diaspora"
     }
 
     "The conversion" >> {

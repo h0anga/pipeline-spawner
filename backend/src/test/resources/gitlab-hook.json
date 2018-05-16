@@ -1,0 +1,47 @@
+{
+  "before": "74bf0d4ce5d04edc1b50575b071c69b90f02a512",
+  "after": "6ce09d7bbb9991f04175f7362c2c51f293e2a7ed",
+  "ref": "refs/heads/master",
+  "user_id": 279,
+  "user_name": "alberto.colombo",
+  "project_id": 1078,
+  "repository": {
+    "name": "simba",
+    "url": "git@git.sns.sky.com:alberto.colombo/simba.git",
+    "description": "Sky mobile sim repository ",
+    "homepage": "https://git.sns.sky.com/alberto.colombo/simba"
+  },
+  "commits": [
+    {
+      "id": "6ce09d7bbb9991f04175f7362c2c51f293e2a7ed",
+      "message": "renamed to simba-forked",
+      "timestamp": "2018-05-16T13:58:05+01:00",
+      "url": "https://git.sns.sky.com/alberto.colombo/simba/commit/6ce09d7bbb9991f04175f7362c2c51f293e2a7ed",
+      "author": {
+        "name": "imke.himstedt",
+        "email": "imke.himstedt@sky.uk"
+      }
+    },
+    {
+      "id": "64765c582d155834d0829754507de387839ceacc",
+      "message": "PP+TM: HERMES-717, use latest pipeline deploy and pact images",
+      "timestamp": "2018-05-16T11:50:13+01:00",
+      "url": "https://git.sns.sky.com/alberto.colombo/simba/commit/64765c582d155834d0829754507de387839ceacc",
+      "author": {
+        "name": "Team Hermes",
+        "email": "hermes@sky.uk"
+      }
+    },
+    {
+      "id": "74bf0d4ce5d04edc1b50575b071c69b90f02a512",
+      "message": "PP+TM: use latest pipeline deploy and pact images",
+      "timestamp": "2018-05-15T13:08:13+01:00",
+      "url": "https://git.sns.sky.com/alberto.colombo/simba/commit/74bf0d4ce5d04edc1b50575b071c69b90f02a512",
+      "author": {
+        "name": "Team Hermes",
+        "email": "hermes@sky.uk"
+      }
+    }
+  ],
+  "total_commits_count": 3
+}
