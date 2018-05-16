@@ -1,23 +1,22 @@
 package com.sky.ukiss.pipelinespawner
 
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, LocalDateTime, ZoneId}
+import java.time.Clock
 
 import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
-import com.sky.ukiss.pipelinespawner.utils.Utils
 import com.sky.ukiss.pipelinespawner.utils.Utils._
 import io.fabric8.kubernetes.api.model._
 
 import scala.collection.JavaConverters._
 
-class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => Job) {
+class ConvertGitHookToJob(generateId: () => String,
+                          clock: Clock,
+                          artifactoryUserName: String,
+                          artifactoryPassword: String) extends (GitHookPayload => Job) {
 
   private val repo = "repo.sns.sky.com:8186"
   private val version = "0.1.5"
   private val buildImage = s"$repo/dost/pipeline-build:$version"
   private val myName = "pipeline-spawner"
-
-
 
   override def apply(hook: GitHookPayload): Job = {
     val metadata = new ObjectMeta()
@@ -42,7 +41,7 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
     podSpec.setRestartPolicy("Never")
     podSpec.setContainers(List(container).asJava)
 
-    container.setEnv(List(artifactoryUserName, artifactoryPassword, goPipelineLabel).asJava)
+    container.setEnv(List(userNameEnvVar, passwordEnvVar, goPipelineLabel).asJava)
     container.setImage(buildImage)
     container.setName("build")
 
@@ -56,21 +55,24 @@ class ConvertGitHookToJob(generateId: () => String) extends (GitHookPayload => J
     job
   }
 
-  private val artifactoryUserName = new EnvVar(
+  private val userNameEnvVar = new EnvVar(
     "ARTIFACTORY_USERNAME",
-    Config().getString("pipeline-spawner.artifactoryUsername"),
-    null)
+    artifactoryUserName,
+    null
+  )
 
-  private val artifactoryPassword = new EnvVar(
+  private val passwordEnvVar = new EnvVar(
     "ARTIFACTORY_PASSWORD",
-    Config().getString("pipeline-spawner.artifactoryPassword"),
-    null)
+    artifactoryPassword,
+    null
+  )
 
   private def goPipelineLabel = {
-    val goPipelineLabel = new EnvVar()
-    goPipelineLabel.setName("GO_PIPELINE_LABEL")
-    goPipelineLabel.setValue(formattedTimestamp(Instant.now()))
-    goPipelineLabel
+    new EnvVar(
+      "GO_PIPELINE_LABEL",
+      formattedTimestamp(clock.instant()),
+      null
+    )
   }
 }
 

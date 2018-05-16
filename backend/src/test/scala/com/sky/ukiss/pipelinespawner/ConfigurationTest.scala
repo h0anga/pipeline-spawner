@@ -6,7 +6,7 @@ import org.specs2.mutable.Specification
 class ConfigurationTest extends Specification with Mockito {
 
   "Configuration" >> {
-    val userName = Config().getString("pipeline-spawner.artifactoryUsername")
+    val userName = SpawnerConfig().getString("pipeline-spawner.artifactoryUsername")
 
     "return mango" >> {
       userName must_== "mango"

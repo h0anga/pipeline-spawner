@@ -1,18 +1,29 @@
 package com.sky.ukiss.pipelinespawner
 
+import java.time.{Clock, Instant}
+
 import com.sky.ukiss.pipelinespawner.hooks.GitHookPayload
 import io.circe.generic.auto._
+import org.mockito.Mockito.when
+import org.scalatest.mockito.MockitoSugar
 import org.specs2.mutable.Specification
 
 import scala.collection.JavaConverters
 import scala.io.Source
 
-class ConvertGitHookToJobTest extends Specification {
+class ConvertGitHookToJobTest extends Specification with MockitoSugar {
   lazy val payload = Source.fromResource("git-hook.json").mkString
   lazy val hook: GitHookPayload = io.circe.parser.parse(payload).flatMap(_.as[GitHookPayload]).getOrElse(???)
 
+  val username = "foo"
+  val password = "bar"
+  val now = Instant.ofEpochMilli(0)
+  val clock = mock[Clock]
+
+  when(clock.instant()) thenReturn now
+
   "The Converter" >> {
-    lazy val converter = new ConvertGitHookToJob(() => "id")
+    lazy val converter = new ConvertGitHookToJob(() => "id", clock, username, password)
 
     "The payload can be parsed from JSON" >> {
       hook.project.homepage must_== "http://example.com/mike/diaspora"
@@ -28,8 +39,7 @@ class ConvertGitHookToJobTest extends Specification {
       "that" >> {
         val container = converter(hook).getSpec.getTemplate.getSpec.getContainers.get(0)
         val commands = container.getCommand.get(2)
-        val envVars = JavaConverters.asScalaBuffer(container.getEnv)
-        val envVarsNames = envVars.map(_.getName)
+        val envVars = JavaConverters.asScalaBuffer(container.getEnv).map(e => (e.getName, e.getValue)).toMap
 
         "clones the git repository" >> {
           commands must contain("git clone http://example.com/mike/diaspora.git")
@@ -40,9 +50,9 @@ class ConvertGitHookToJobTest extends Specification {
         }
 
         "has environment variables injected" >> {
-          envVarsNames.contains("ARTIFACTORY_USERNAME") must beTrue
-          envVarsNames.contains("ARTIFACTORY_PASSWORD") must beTrue
-          envVarsNames.contains("GO_PIPELINE_LABEL") must beTrue
+          envVars("ARTIFACTORY_USERNAME") must_== username
+          envVars("ARTIFACTORY_PASSWORD") must_== password
+          envVars("GO_PIPELINE_LABEL") must_== "19700101000000"
         }
       }
     }

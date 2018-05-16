@@ -2,9 +2,9 @@ package com.sky.ukiss.pipelinespawner
 
 import com.typesafe.config._
 
-object Config {
+object SpawnerConfig {
   val env = sys.env.getOrElse("ENVIRONMENT", "development")
 
   val conf = ConfigFactory.load()
-  def apply() = conf.getConfig(env)
+  def apply(): Config = conf.getConfig(env)
 }
