@@ -4,7 +4,7 @@ import java.time.Clock
 
 import com.sky.ukiss.pipelinespawner.hooks.GithubPayload
 import com.sky.ukiss.pipelinespawner.utils.Utils._
-import io.fabric8.kubernetes.api.model._
+import io.fabric8.kubernetes.api.model.{EnvVarSource, _}
 
 import scala.collection.JavaConverters._
 
@@ -54,6 +54,16 @@ class ConvertGitHookToJob(generateId: () => String,
 
     job
   }
+
+  val secretKeySelector = new SecretKeySelector("spawner-key-secret", "private.key", false)
+  val envVarSource = new EnvVarSource()
+  envVarSource.setSecretKeyRef(secretKeySelector)
+
+  private val privateKeySecretEnvVar = new EnvVar(
+    "PRIVETE_KEY_SECRET",
+    null,
+    envVarSource
+  )
 
   private val userNameEnvVar = new EnvVar(
     "ARTIFACTORY_USERNAME",
