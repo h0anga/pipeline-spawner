@@ -37,7 +37,8 @@ class JobEvents(client: KubernetesClient,
     else Unknown
   }
 
-  private def podLogs(jobName: String) = {
+  //TODO - remove after front-end implementation
+  def podLogs(jobName: String): String = {
     val labelSelector = new LabelSelector
     labelSelector.setMatchLabels(Map("job-name" -> jobName).asJava)
 

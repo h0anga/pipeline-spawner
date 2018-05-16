@@ -11,6 +11,7 @@ class ScalatraBootstrap extends LifeCycle {
       context mount (appContext.webSocketComponent, "/ws")
       context mount (appContext.frontendRoute, "/static")
       context mount (appContext.gitHookServiceComponent, "/hook")
+      context mount (appContext.logRoute, "/logs")
       context mount (new ScalatraServlet {
         get("/") {
           redirect("/static/content/index.html")
