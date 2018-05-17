@@ -25,6 +25,7 @@ object JobMap {
       JobEvent.fromString(line) match {
         case Success(JobCreated(id, job)) => println("job created: " + job); copy(jobs = jobs + (id -> job), error = None)
         case Success(JobChanged(id, job)) => println("job updated: " + job); copy(jobs = jobs + (id -> job), error = None)
+        case Success(JobDeleted(id)) => println("job deleted: " + id); copy(jobs = jobs - id, error = None)
         case Success(NoJobEvent$) => println("Received the initial job event"); this
         case Success(other) => copy(error = Some(s"Unsupported event: $other"))
         case Failure(err) => copy(error = Some(
