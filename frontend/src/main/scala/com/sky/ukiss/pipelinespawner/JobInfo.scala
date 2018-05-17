@@ -29,18 +29,20 @@ object JobInfo {
       <.div(
         <.h1(
           ^.className := "display-4"
-        )(props.data.appName),
+        )(
+          props.data.appName
+        ),
         <.p(
           ^.className := "lead"
         )(
-          s"Job ${props.id}",
-          <.button(
-            ^.`type` := "button",
-            ^.className := "btn btn-primary float-right"
-          )(
-            ^.onClick --> refreshLogs(),
-            "Refresh"
-          )
+          s"Job ${props.id}"
+        ),
+        <.button(
+          ^.`type` := "button",
+          ^.className := "btn btn-primary"
+        )(
+          ^.onClick --> refreshLogs(),
+          "Get logs"
         ),
         <.div(
           <.pre(state)
