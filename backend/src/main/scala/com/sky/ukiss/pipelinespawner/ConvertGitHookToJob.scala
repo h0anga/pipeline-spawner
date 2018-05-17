@@ -22,7 +22,7 @@ class ConvertGitHookToJob(generateId: () => String,
     val metadata = new ObjectMeta()
     val id = generateId()
     metadata.setName(s"$myName-$id")
-    metadata.setLabels(Map("app_name" -> myName).asJava)
+    metadata.setLabels(Map("app_name" -> myName, "app_building" -> hook.repository.name).asJava)
 
     val job = new Job()
     val spec = new JobSpec()
