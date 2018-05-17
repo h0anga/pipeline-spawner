@@ -23,7 +23,7 @@ class ConvertGitHookToJobTest extends Specification with MockitoSugar {
   when(clock.instant()) thenReturn now
 
   "The Converter" >> {
-    lazy val converter = new ConvertGitHookToJob(() => "id", clock, username, password)
+    lazy val converter = new ConvertGitHookToJob(() => "id", clock)
 
     "The payload can be parsed from JSON" >> {
       hook.project.get.homepage must_== "http://example.com/mike/diaspora"

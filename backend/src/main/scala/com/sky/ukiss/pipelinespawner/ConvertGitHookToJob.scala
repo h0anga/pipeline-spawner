@@ -9,9 +9,7 @@ import io.fabric8.kubernetes.api.model._
 import scala.collection.JavaConverters._
 
 class ConvertGitHookToJob(generateId: () => String,
-                          clock: Clock,
-                          artifactoryUserName: String,
-                          artifactoryPassword: String) extends (GithubPayload => Job) {
+                          clock: Clock) extends (GithubPayload => Job) {
 
   private val repo = "repo.sns.sky.com:8186"
   private val version = "1.0.13"
@@ -45,18 +43,14 @@ class ConvertGitHookToJob(generateId: () => String,
     container.setImage(buildImage)
     container.setName("build")
 
-    val volumeMount = new VolumeMount()
-    volumeMount.setName("private-key")
-    volumeMount.setMountPath("/build/.ssh")
-    container.setVolumeMounts(List(volumeMount).asJava)
 
-    val volume = new Volume()
-    volume.setName("private-key")
-    val secretVolumeSource = new SecretVolumeSource()
-    secretVolumeSource.setSecretName("spawner-key-secret")
-    volume.setSecret(secretVolumeSource)
+    container.setVolumeMounts(List(
+      volumeMount("private-key", "/build/.ssh")
+    ).asJava)
 
-    podSpec.setVolumes(List(volume).asJava)
+    podSpec.setVolumes(List(
+      volume("private-key", "spawner-key-secret")
+    ).asJava)
 
     val cloneUrl = hook.project.map(_.git_http_url).getOrElse(hook.repository.url)
     val commit = hook.after
@@ -68,16 +62,39 @@ class ConvertGitHookToJob(generateId: () => String,
     job
   }
 
+  private def volumeMount(name:String, mountPath: String) = {
+    val volumeMount = new VolumeMount()
+    volumeMount.setName(name)
+    volumeMount.setMountPath(mountPath)
+    volumeMount
+  }
+
+  private def volume(name:String, secretName: String) = {
+    val volume = new Volume()
+    volume.setName(name)
+    val secretVolumeSource = new SecretVolumeSource()
+    secretVolumeSource.setSecretName(secretName)
+    volume.setSecret(secretVolumeSource)
+    volume
+  }
+
+  private def envVarSource(key: String, name: String) = {
+    val envVarSource = new EnvVarSource()
+    envVarSource.setSecretKeyRef(new SecretKeySelector(key, name, false))
+    envVarSource
+  }
+
+
   private val userNameEnvVar = new EnvVar(
     "ARTIFACTORY_USERNAME",
-    artifactoryUserName,
-    null
+    null,
+    envVarSource("spawner-artifactory-secret", "artifactory.user")
   )
 
   private val passwordEnvVar = new EnvVar(
     "ARTIFACTORY_PASSWORD",
-    artifactoryPassword,
-    null
+    null,
+    envVarSource("spawner-artifactory-secret", "artifactory.password")
   )
 
   private def goPipelineLabel = {
