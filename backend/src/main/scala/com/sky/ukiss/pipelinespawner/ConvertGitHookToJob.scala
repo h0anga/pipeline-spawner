@@ -41,9 +41,22 @@ class ConvertGitHookToJob(generateId: () => String,
     podSpec.setRestartPolicy("Never")
     podSpec.setContainers(List(container).asJava)
 
-    container.setEnv(List(userNameEnvVar, passwordEnvVar, goPipelineLabel).asJava)
+    container.setEnv(List(gitSshCommand, userNameEnvVar, passwordEnvVar, goPipelineLabel).asJava)
     container.setImage(buildImage)
     container.setName("build")
+
+    val volumeMount = new VolumeMount()
+    volumeMount.setName("private-key")
+    volumeMount.setMountPath("/private-key")
+    container.setVolumeMounts(List(volumeMount).asJava)
+
+    val volume = new Volume()
+    volume.setName("private-key")
+    val secretVolumeSource = new SecretVolumeSource()
+    secretVolumeSource.setSecretName("spawner-private-key")
+    volume.setSecret(secretVolumeSource)
+
+    podSpec.setVolumes(List(volume).asJava)
 
     val cloneUrl = hook.project.map(_.git_http_url).getOrElse(hook.repository.url)
     val commit = hook.after
@@ -55,14 +68,10 @@ class ConvertGitHookToJob(generateId: () => String,
     job
   }
 
-  val secretKeySelector = new SecretKeySelector("spawner-key-secret", "private.key", false)
-  val envVarSource = new EnvVarSource()
-  envVarSource.setSecretKeyRef(secretKeySelector)
-
-  private val privateKeySecretEnvVar = new EnvVar(
-    "PRIVETE_KEY_SECRET",
-    null,
-    envVarSource
+  private val gitSshCommand = new EnvVar(
+    "GIT_SSH_COMMAND",
+    "ssh -i /private-key",
+    null
   )
 
   private val userNameEnvVar = new EnvVar(
