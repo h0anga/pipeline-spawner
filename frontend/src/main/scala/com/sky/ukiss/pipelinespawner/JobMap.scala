@@ -10,7 +10,7 @@ import scala.util.{Failure, Success}
 
 object JobMap {
 
-  case class Props(url: String)
+  case class Props()
 
   case class State(
                     ws: Option[WebSocket], // TODO open websocket when component is created, and assume it's always there?
@@ -38,7 +38,7 @@ object JobMap {
 
   class Backend($: BackendScope[Props, State]) {
 
-    def render(s: State) = {
+    def render(s: State, p: Props) = {
 
       def jobContent(j: (JobId, JobData)) = {
         val status = j._2.status
@@ -47,7 +47,7 @@ object JobMap {
           <.tr(
             <.td(
               ^.colSpan := 3
-            )(JobInfo.Component(displayedJob)),
+            )(JobInfo.Component(JobInfo.Props(displayedJob._1, displayedJob._2))),
             <.td(
               <.button(
                 ^.`type` := "button",
@@ -140,7 +140,7 @@ object JobMap {
         }
 
         // Create WebSocket and setup listeners
-        val ws = new WebSocket(p.url)
+        val ws = new WebSocket(Global.webSocketUrl + "/ws")
         ws.onopen = onopen _
         ws.onclose = onclose _
         ws.onmessage = onmessage _
