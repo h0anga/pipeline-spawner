@@ -12,7 +12,7 @@ class Context(config: Config) {
   lazy val namespace: String = config.getString("pipeline-spawner.namespace")
   lazy val kubernetesService = new KubernetesService(kubernetesClient, namespace, gitHookPayloadToJobConverter)
   lazy val kubernetesClient = new DefaultKubernetesClient()
-  lazy val logProvider = new LogProvider(kubernetesClient)
+  lazy val logProvider = new LogProvider(kubernetesClient, namespace)
   lazy val logRoute = new LogRoute(logProvider)
   lazy val generateRandomId: () => String = () => Random.alphanumeric.filter(c => c.isDigit || c.isLower).take(6).mkString
   lazy val gitHookPayloadToJobConverter = new ConvertGitHookToJob(
