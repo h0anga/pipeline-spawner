@@ -4,7 +4,7 @@ import java.time.Clock
 
 import com.sky.ukiss.pipelinespawner.hooks.GithubPayload
 import com.sky.ukiss.pipelinespawner.utils.Utils._
-import io.fabric8.kubernetes.api.model.{EnvVarSource, _}
+import io.fabric8.kubernetes.api.model._
 
 import scala.collection.JavaConverters._
 
@@ -14,7 +14,7 @@ class ConvertGitHookToJob(generateId: () => String,
                           artifactoryPassword: String) extends (GithubPayload => Job) {
 
   private val repo = "repo.sns.sky.com:8186"
-  private val version = "0.1.5"
+  private val version = "1.0.13"
   private val buildImage = s"$repo/dost/pipeline-build:$version"
   private val myName = "pipeline-spawner"
 
@@ -41,19 +41,19 @@ class ConvertGitHookToJob(generateId: () => String,
     podSpec.setRestartPolicy("Never")
     podSpec.setContainers(List(container).asJava)
 
-    container.setEnv(List(gitSshCommand, userNameEnvVar, passwordEnvVar, goPipelineLabel).asJava)
+    container.setEnv(List(userNameEnvVar, passwordEnvVar, goPipelineLabel).asJava)
     container.setImage(buildImage)
     container.setName("build")
 
     val volumeMount = new VolumeMount()
     volumeMount.setName("private-key")
-    volumeMount.setMountPath("/private-key")
+    volumeMount.setMountPath("/build/.ssh")
     container.setVolumeMounts(List(volumeMount).asJava)
 
     val volume = new Volume()
     volume.setName("private-key")
     val secretVolumeSource = new SecretVolumeSource()
-    secretVolumeSource.setSecretName("spawner-private-key")
+    secretVolumeSource.setSecretName("spawner-key-secret")
     volume.setSecret(secretVolumeSource)
 
     podSpec.setVolumes(List(volume).asJava)
@@ -67,12 +67,6 @@ class ConvertGitHookToJob(generateId: () => String,
 
     job
   }
-
-  private val gitSshCommand = new EnvVar(
-    "GIT_SSH_COMMAND",
-    "ssh -i /private-key",
-    null
-  )
 
   private val userNameEnvVar = new EnvVar(
     "ARTIFACTORY_USERNAME",
