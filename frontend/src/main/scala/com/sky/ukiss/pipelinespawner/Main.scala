@@ -15,7 +15,7 @@ object Main {
       ^.className := "container-fluid"
     )(
       <.h1("Current Jobs"),
-      JobMap.Component(JobMap.Props("ws://localhost:8080/ws"))
+      JobMap.Component(JobMap.Props())
     ).renderIntoDOM(reactContainer)
   }
 }
