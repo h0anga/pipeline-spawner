@@ -6,16 +6,13 @@ import scala.collection.JavaConverters._
 
 class LogProvider(client: KubernetesClient, namespace: String) {
 
-   def podLogs(jobName: String): String = {
+  def podLogs(jobName: String): String = {
     val labelSelector = new LabelSelector
     labelSelector.setMatchLabels(Map("job-name" -> jobName).asJava)
 
-    val podNames = client.pods.inNamespace(namespace).withLabelSelector(labelSelector).list
-      .getItems.asScala.map(p => p.getMetadata.getName)
+    val podName = client.pods.inNamespace(namespace).withLabelSelector(labelSelector).list
+      .getItems.asScala.maxBy(_.getStatus.getStartTime).getMetadata.getName
 
-    podNames
-      .map(podName => s"$podName :\n ${client.pods.inNamespace(namespace).withName(podName).getLog}")
-      .mkString("\n\n")
+    client.pods().inNamespace(namespace).withName(podName).inContainer("build").getLog
   }
-
 }
