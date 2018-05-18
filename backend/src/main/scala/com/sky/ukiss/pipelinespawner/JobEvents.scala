@@ -23,7 +23,8 @@ class JobEvents(client: KubernetesClient,
     JobData(
       jobName,
       j.getMetadata.getLabels.get("app_building"),
-      jobStatus(j)
+      jobStatus(j),
+      j.getStatus.getStartTime
     )
   }
 

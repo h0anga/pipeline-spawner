@@ -36,9 +36,31 @@ spec:
             mountPath: /var/lib/docker
           - name: docker-exec-location
             mountPath: /var/run/pipeline-spawner
+          - name: plugins
+            mountPath: /run/docker/plugins/
+          - name: json-store
+            mountPath: /var/lib/docker/plugin-data/
+          - name: data-volume
+            mountPath: /data
+
+      - name: local-volume-plugin
+        image: cwspear/docker-local-persist-volume-plugin:v1.3.0
+        volumeMounts:
+          - name: plugins
+            mountPath: /run/docker/plugins/
+          - name: json-store
+            mountPath: /var/lib/docker/plugin-data/
+          - name: data-volume
+            mountPath: /data
       terminationGracePeriodSeconds: 30
       volumes:
       - name: docker-graph-storage
+        emptyDir: {}
+      - name: plugins
+        emptyDir: {}
+      - name: json-store
+        emptyDir: {}
+      - name: data-volume
         emptyDir: {}
       - name: docker-exec-location
         hostPath:

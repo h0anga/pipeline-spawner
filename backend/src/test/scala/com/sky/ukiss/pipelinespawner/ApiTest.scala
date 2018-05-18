@@ -7,7 +7,7 @@ class ApiTest extends Specification {
   args(sequential = true)
 
   "The JobEvent should" >> {
-    val jobEvent = JobCreated("123", JobData("123", "foobar", Active))
+    val jobEvent = JobCreated("123", JobData("123", "foobar", Active, "1970-01-01-12.00.00"))
 
     var serialized: String = ""
 

@@ -2,8 +2,8 @@ package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.api.{JobData, JobId}
 import japgolly.scalajs.react
-import japgolly.scalajs.react.{BackendScope, Callback}
 import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{BackendScope, Callback}
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html.Div
 

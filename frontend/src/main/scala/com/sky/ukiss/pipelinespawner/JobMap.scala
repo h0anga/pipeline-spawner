@@ -20,8 +20,6 @@ object JobMap {
                   ) {
 
     def withMessage(line: String): State = {
-      println(line)
-      if (line == "X") return this // TODO why is this happening??? We're getting an X from the WebSocket!!!
       JobEvent.fromString(line) match {
         case Success(JobCreated(id, job)) => println("job created: " + job); copy(jobs = jobs + (id -> job), error = None)
         case Success(JobChanged(id, job)) => println("job updated: " + job); copy(jobs = jobs + (id -> job), error = None)
@@ -47,9 +45,6 @@ object JobMap {
         s.displayedJob.filter(_._1 == j._1).map(displayedJob =>
           <.tr(
             <.td(
-              ^.colSpan := 3
-            )(JobInfo.Component(JobInfo.Props(displayedJob._1, displayedJob._2))),
-            <.td(
               <.button(
                 ^.`type` := "button",
                 ^.className := "btn btn-primary"
@@ -57,10 +52,24 @@ object JobMap {
                 ^.onClick --> $.modState(s => s.copy(displayedJob = None)),
                 info
               )
+            ),
+            <.td(
+              ^.colSpan := 3
+            )(
+              JobInfo.Component(JobInfo.Props(displayedJob._1, displayedJob._2))
             )
           )
         ).getOrElse(
           <.tr(
+            <.td(
+              <.button(
+                ^.`type` := "button",
+                ^.className := "btn btn-outline-primary"
+              )(
+                ^.onClick --> $.modState(s => s.copy(displayedJob = Some((j._1, j._2)))),
+                info
+              )
+            ),
             <.td(j._1),
             <.td(j._2.appName),
             <.td(
@@ -70,16 +79,7 @@ object JobMap {
                 "text-warning" -> (status == Active)
               )
             )
-            (status.toString),
-            <.td(
-              <.button(
-                ^.`type` := "button",
-                ^.className := "btn btn-outline-primary"
-              )(
-                ^.onClick --> $.modState(s => s.copy(displayedJob = Some((j._1, j._2)))),
-                info
-              )
-            )
+            (status.toString)
           )
         )
       }
@@ -90,11 +90,11 @@ object JobMap {
         )(
           <.thead(
             <.tr(
-              <.th("ID"), <.th("Application Name"), <.th("Status"), <.th("")
+              <.th(""), <.th("ID"), <.th("Application Name"), <.th("Status")
             )
           ),
           <.tbody(
-            s.jobs.map(j => jobContent(j)).toVector: _*
+            s.jobs.toIndexedSeq.sortBy(_._2.startTime)(Ordering.String.reverse).map(j => jobContent(j)).toVector: _*
           )
         ),
         if (s.error.isDefined) {
@@ -127,7 +127,12 @@ object JobMap {
           })
         }
 
-        def onmessage(e: MessageEvent): Unit = direct.modState(_.withMessage(e.data.toString))
+        def onmessage(e: MessageEvent): Unit = {
+          val line = e.data.toString
+          println(line)
+          if (line == "X") return // TODO why is this happening??? We're getting an X from the WebSocket!!!
+          direct.modState(_.withMessage(line))
+        }
 
         def onerror(e: Event): Unit = {
           val msg: String = e.asInstanceOf[js.Dynamic]
