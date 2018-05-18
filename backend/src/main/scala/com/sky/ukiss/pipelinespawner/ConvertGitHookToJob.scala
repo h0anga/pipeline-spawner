@@ -45,8 +45,8 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-      - image: $buildImage
-        name: build
+      - name: build
+        image: $buildImage
         command:
         - bash
         - -c
@@ -64,14 +64,29 @@ spec:
               key: artifactoryUser
         - name: GO_PIPELINE_LABEL
           value: "$now"
+        - name: DOCKER_HOST
+          value: tcp://localhost:2375
         volumeMounts:
         - name: secret-volume
           mountPath: /build/.ssh
+      - name: dind-daemon 
+        image: docker:18.05.0-dind
+        resources: 
+          requests:
+            cpu: 20m
+            memory: 512Mi
+        securityContext: 
+          privileged: true
+        volumeMounts: 
+          - name: docker-graph-storage 
+            mountPath: /var/lib/docker           
       volumes:
       - name: secret-volume
         secret:
           defaultMode: 420
           secretName: pipeline-spawner-secret
+      - name: docker-graph-storage
+        emptyDir: {}
       """
 
     kubernetesClient.extensions().jobs().load(new ByteArrayInputStream(jobYaml.getBytes)).get()
