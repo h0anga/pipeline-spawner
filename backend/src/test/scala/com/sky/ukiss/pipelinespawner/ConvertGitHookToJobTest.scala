@@ -4,6 +4,7 @@ import java.time.{Clock, Instant}
 
 import com.sky.ukiss.pipelinespawner.hooks.GithubPayload
 import io.circe.generic.auto._
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import org.mockito.Mockito.when
 import org.scalatest.mockito.MockitoSugar
 import org.specs2.mutable.Specification
@@ -15,15 +16,13 @@ class ConvertGitHookToJobTest extends Specification with MockitoSugar {
   val payload = Source.fromResource("github-hook.json").mkString
   val hook: GithubPayload = io.circe.parser.parse(payload).flatMap(_.as[GithubPayload]).getOrElse(???)
 
-  val username = "foo"
-  val password = "bar"
   val now = Instant.ofEpochMilli(0)
   val clock = mock[Clock]
 
   when(clock.instant()) thenReturn now
 
   "The Converter" >> {
-    lazy val converter = new ConvertGitHookToJob(() => "id", clock)
+    lazy val converter = new ConvertGitHookToJob(() => "id", clock, new DefaultKubernetesClient())
 
     "The payload can be parsed from JSON" >> {
       hook.project.get.homepage must_== "http://example.com/mike/diaspora"
@@ -49,9 +48,7 @@ class ConvertGitHookToJobTest extends Specification with MockitoSugar {
           commands must contain("git checkout da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
         }
 
-        "has environment variables injected" >> {
-          envVars("ARTIFACTORY_USERNAME") must_== username
-          envVars("ARTIFACTORY_PASSWORD") must_== password
+        "has the GO_PIPELINE_LABEL variables injected" >> {
           envVars("GO_PIPELINE_LABEL") must_== "19700101000000"
         }
       }

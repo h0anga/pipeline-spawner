@@ -17,7 +17,8 @@ class Context(config: Config) {
   lazy val generateRandomId: () => String = () => Random.alphanumeric.filter(c => c.isDigit || c.isLower).take(6).mkString
   lazy val gitHookPayloadToJobConverter = new ConvertGitHookToJob(
     generateRandomId,
-    Clock.systemUTC()
+    Clock.systemUTC(),
+    kubernetesClient
   )
   lazy val gitHookServiceComponent = new GitHookServiceComponent(kubernetesService)
   lazy val atmosphereJobEventBroadcaster = new AtmosphereJobEventBroadcaster

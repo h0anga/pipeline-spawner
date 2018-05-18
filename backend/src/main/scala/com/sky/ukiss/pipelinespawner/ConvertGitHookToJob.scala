@@ -1,15 +1,16 @@
 package com.sky.ukiss.pipelinespawner
 
+import java.io.ByteArrayInputStream
 import java.time.Clock
 
 import com.sky.ukiss.pipelinespawner.hooks.GithubPayload
 import com.sky.ukiss.pipelinespawner.utils.Utils._
 import io.fabric8.kubernetes.api.model._
-
-import scala.collection.JavaConverters._
+import io.fabric8.kubernetes.client.KubernetesClient
 
 class ConvertGitHookToJob(generateId: () => String,
-                          clock: Clock) extends (GithubPayload => Job) {
+                          clock: Clock,
+                          kubernetesClient: KubernetesClient) extends (GithubPayload => Job) {
 
   private val repo = "repo.sns.sky.com:8186"
   private val version = "1.0.13"
@@ -17,92 +18,64 @@ class ConvertGitHookToJob(generateId: () => String,
   private val myName = "pipeline-spawner"
 
   override def apply(hook: GithubPayload): Job = {
-    val metadata = new ObjectMeta()
     val id = generateId()
-    metadata.setName(s"$myName-$id")
-    metadata.setLabels(Map("app_name" -> myName, "app_building" -> hook.repository.name).asJava)
-
-    val job = new Job()
-    val spec = new JobSpec()
-    val podTemplateSpec = new PodTemplateSpec()
-    val podSpec = new PodSpec()
-    val container = new Container()
-
-    job.setSpec(spec)
-    job.setMetadata(metadata)
-
-    spec.setTemplate(podTemplateSpec)
-
-    podTemplateSpec.setMetadata(metadata)
-    podTemplateSpec.setSpec(podSpec)
-
-    podSpec.setRestartPolicy("Never")
-    podSpec.setContainers(List(container).asJava)
-
-    container.setEnv(List(userNameEnvVar, passwordEnvVar, goPipelineLabel).asJava)
-    container.setImage(buildImage)
-    container.setName("build")
-
-
-    container.setVolumeMounts(List(
-      volumeMount("private-key", "/build/.ssh")
-    ).asJava)
-
-    podSpec.setVolumes(List(
-      volume("private-key", "spawner-key-secret")
-    ).asJava)
-
+    val jobName = s"$myName-$id"
+    val appBeingBuilt = hook.repository.name
+    val now = formattedTimestamp(clock.instant())
     val cloneUrl = hook.project.map(_.git_http_url).getOrElse(hook.repository.url)
     val commit = hook.after
-    container.setCommand(List(
-      "bash", "-c",
-      s"git clone $cloneUrl application && cd application/pipeline && git checkout $commit && make build push"
-    ).asJava)
 
-    job
+    val jobYaml =
+      s"""
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app_building: $appBeingBuilt
+    app_name: $myName
+  name: $jobName
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app_building: $appBeingBuilt
+        app_name: $myName
+      name: $jobName
+    spec:
+      restartPolicy: Never
+      containers:
+      - image: $buildImage
+        name: build
+        command:
+        - bash
+        - -c
+        - git clone $cloneUrl application && cd application/pipeline && git checkout $commit && make build push
+        env:
+        - name: ARTIFACTORY_USERNAME
+          valueFrom:
+            secretKeyRef: 
+              name: pipeline-spawner-secret
+              key: artifactoryUser
+        - name: ARTIFACTORY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pipeline-spawner-secret
+              key: artifactoryUser
+        - name: GO_PIPELINE_LABEL
+          value: "$now"
+        volumeMounts:
+        - name: secret-volume
+          mountPath: /build/.ssh
+      volumes:
+      - name: secret-volume
+        secret:
+          defaultMode: 420
+          secretName: pipeline-spawner-secret
+      """
+
+    kubernetesClient.extensions().jobs().load(new ByteArrayInputStream(jobYaml.getBytes)).get()
   }
 
-  private def volumeMount(name:String, mountPath: String) = {
-    val volumeMount = new VolumeMount()
-    volumeMount.setName(name)
-    volumeMount.setMountPath(mountPath)
-    volumeMount
-  }
-
-  private def volume(name:String, secretName: String) = {
-    val volume = new Volume()
-    volume.setName(name)
-    val secretVolumeSource = new SecretVolumeSource()
-    secretVolumeSource.setSecretName(secretName)
-    volume.setSecret(secretVolumeSource)
-    volume
-  }
-
-  private def envVarSource(key: String, name: String) = {
-    val envVarSource = new EnvVarSource()
-    envVarSource.setSecretKeyRef(new SecretKeySelector(key, name, false))
-    envVarSource
-  }
-
-
-  private val userNameEnvVar = new EnvVar(
-    "ARTIFACTORY_USERNAME",
-    null,
-    envVarSource("spawner-artifactory-secret", "artifactory.user")
-  )
-
-  private val passwordEnvVar = new EnvVar(
-    "ARTIFACTORY_PASSWORD",
-    null,
-    envVarSource("spawner-artifactory-secret", "artifactory.password")
-  )
-
-  private def goPipelineLabel = {
-    new EnvVar(
-      "GO_PIPELINE_LABEL",
-      formattedTimestamp(clock.instant()),
-      null
-    )
-  }
 }
 
