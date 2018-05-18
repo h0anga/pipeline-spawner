@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: &name pipeline-spawner-dind-daemon
+  namespace: mobile
+  labels:
+    app_name: *name
+spec:
+  selector:
+    matchLabels:
+      app_name: *name
+  template:
+    metadata:
+      labels:
+        app_name: *name
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: dind-daemon
+        image: docker:18.05.0-dind
+        resources:
+          requests:
+            cpu: 20m
+            memory: 512Mi
+        lifecycle:
+          postStart:
+            exec:
+              command: [cp, /usr/local/bin/docker, /var/run/pipeline-spawner/docker]
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - name: docker-graph-storage
+            mountPath: /var/lib/docker
+          - name: docker-exec-location
+            mountPath: /var/run/pipeline-spawner
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: docker-graph-storage
+        emptyDir: {}
+      - name: docker-exec-location
+        hostPath:
+          path: /var/run/pipeline-spawner
+          type: DirectoryOrCreate
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: &name pipeline-spawner-dind-daemon
+  namespace: mobile
+spec:
+  selector:
+    app_name: *name
+  ports:
+  - name: tcp
+    protocol: TCP
+    port: 2375
+    targetPort: 2375

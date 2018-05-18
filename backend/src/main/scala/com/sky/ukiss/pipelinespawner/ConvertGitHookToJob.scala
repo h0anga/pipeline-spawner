@@ -64,14 +64,21 @@ spec:
               key: artifactoryUser
         - name: GO_PIPELINE_LABEL
           value: "$now"
+        - name: DOCKER_HOST
+          value: tcp://pipeline-spawner-dind-daemon:2375
         volumeMounts:
         - name: secret-volume
           mountPath: /build/.ssh
+        - name: docker-exec-volume
+          mountPath: /usr/bin/docker
       volumes:
       - name: secret-volume
         secret:
           defaultMode: 420
           secretName: pipeline-spawner-secret
+      - name: docker-exec-volume
+        hostPath:
+          path: /var/run/pipeline-spawner/docker
       """
 
     kubernetesClient.extensions().jobs().load(new ByteArrayInputStream(jobYaml.getBytes)).get()
