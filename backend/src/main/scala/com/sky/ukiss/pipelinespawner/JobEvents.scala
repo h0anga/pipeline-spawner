@@ -1,7 +1,7 @@
 package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.api.{Active, Failed, JobChanged, JobCreated, JobData, JobDeleted, JobId, Succeeded, Unknown}
-import io.fabric8.kubernetes.api.model.{ContainerStateTerminated, Job, Pod}
+import io.fabric8.kubernetes.api.model.{Job, Pod}
 import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
 import org.slf4j.LoggerFactory
@@ -85,8 +85,11 @@ class JobEvents(client: KubernetesClient,
     override def eventReceived(action: Watcher.Action, resource: Pod): Unit = {
       if (resource.getMetadata.getLabels.get("app_name") == "pipeline-spawner") {
         if (theBuildContainerIsTerminated(resource)) {
-          resource.getStatus.getContainerStatuses.asScala.foreach(status => status.getState.setTerminated(new ContainerStateTerminated())
-          )
+          resource.getStatus.getContainerStatuses.asScala.foreach(status => {
+            val job = client.extensions().jobs().inNamespace(namespace).withName(resource.getMetadata.getLabels.get("job-name"))
+            val jobData = convertToJobData(job.get())
+            broadcaster.broadcast(JobChanged(jobData.id, jobData))
+          })
         }
       }
     }
