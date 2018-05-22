@@ -146,7 +146,7 @@ object JobMap {
         }
 
         // Create WebSocket and setup listeners
-        val ws = new WebSocket(Global.webSocketUrl + "/ws")
+        val ws = new WebSocket(Global.webSocketUrl + "/ws/jobs")
         ws.onopen = onopen _
         ws.onclose = onclose _
         ws.onmessage = onmessage _

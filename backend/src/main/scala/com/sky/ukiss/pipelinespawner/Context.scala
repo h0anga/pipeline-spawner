@@ -23,7 +23,7 @@ class Context(config: Config) {
   lazy val gitHookServiceComponent = new GitHookServiceComponent(kubernetesService)
   lazy val atmosphereJobEventBroadcaster = new AtmosphereJobEventBroadcaster
   lazy val jobEvents = new JobEvents(kubernetesClient, namespace, atmosphereJobEventBroadcaster)
-  lazy val webSocketComponent = new WebSocketComponent(jobEvents)
+  lazy val webSocketComponent = new WebSocketComponent(jobEvents, logProvider)
   lazy val frontendRoute = new FrontendRoute()
 
 }

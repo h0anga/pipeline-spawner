@@ -86,12 +86,14 @@ class JobEvents(client: KubernetesClient,
 
   client.pods().inNamespace(namespace).watch(new Watcher[Pod] {
     override def eventReceived(action: Watcher.Action, resource: Pod): Unit = {
-      if (resource.getMetadata.getLabels.get("app_name") == "pipeline-spawner") {
+      if (action == Watcher.Action.MODIFIED && resource.getMetadata.getLabels.get("app_name") == "pipeline-spawner") {
         if (theBuildContainerIsTerminated(resource)) {
           resource.getStatus.getContainerStatuses.asScala.foreach(status => {
             val job = client.extensions().jobs().inNamespace(namespace).withName(resource.getMetadata.getLabels.get("job-name"))
-            val jobData = convertToJobData(job.get())
-            broadcaster.broadcast(JobChanged(jobData.id, jobData))
+            if (job.get() != null) {
+              val jobData = convertToJobData(job.get())
+              broadcaster.broadcast(JobChanged(jobData.id, jobData))
+            }
           })
         }
       }

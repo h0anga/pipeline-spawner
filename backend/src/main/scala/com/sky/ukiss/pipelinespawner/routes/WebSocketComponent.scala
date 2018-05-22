@@ -1,6 +1,8 @@
 package com.sky.ukiss.pipelinespawner.routes
 
-import com.sky.ukiss.pipelinespawner.JobEvents
+import java.io.{BufferedReader, InputStreamReader}
+
+import com.sky.ukiss.pipelinespawner.{JobEvents, LogProvider}
 import com.sky.ukiss.pipelinespawner.api.JobCreated
 import org.json4s.{DefaultFormats, Formats}
 import org.log4s
@@ -11,7 +13,7 @@ import org.scalatra.{Ok, ScalatraServlet, SessionSupport}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class WebSocketComponent(jobEvents: JobEvents) extends ScalatraServlet
+class WebSocketComponent(jobEvents: JobEvents, logProvider: LogProvider) extends ScalatraServlet
   with ScalateSupport with JValueResult
   with JacksonJsonSupport with SessionSupport
   with AtmosphereSupport {
@@ -21,7 +23,7 @@ class WebSocketComponent(jobEvents: JobEvents) extends ScalatraServlet
     Ok("Hello world")
   }
 
-  atmosphere("/") {
+  atmosphere("/jobs") {
     new AtmosphereClient {
       def receive: PartialFunction[InboundMessage, Unit] = {
         case Connected =>
@@ -39,6 +41,26 @@ class WebSocketComponent(jobEvents: JobEvents) extends ScalatraServlet
           foreach(send)
       }
 
+    }
+  }
+
+  atmosphere("/logs/:jobId") {
+    new AtmosphereClient {
+
+      def sendLogsOfJob(jobId: String): Unit = new Thread{
+        override def run(): Unit = {
+          send(TextMessage(logProvider.podLogs(jobId)))
+          new BufferedReader(new InputStreamReader(logProvider.streamLogs(jobId))).lines().forEach(line => {
+            println("*** sending " + line)
+            send(TextMessage(line))
+          })
+        }
+      }.start()
+
+      override def receive: AtmoReceive = {
+        case TextMessage(_) =>   sendLogsOfJob(params("jobId"))
+        case _ =>
+      }
     }
   }
 
