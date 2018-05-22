@@ -50,7 +50,7 @@ spec:
         command:
         - bash
         - -c
-        - sudo chmod a+rw /var/run/docker.sock && git clone $cloneUrl application && cd application/pipeline && git checkout $commit && make push
+        - sleep 5; sudo chmod a+rw /var/run/docker.sock && git clone $cloneUrl application && cd application/pipeline && git checkout $commit && make push
         env:
         - name: ARTIFACTORY_USERNAME
           valueFrom:

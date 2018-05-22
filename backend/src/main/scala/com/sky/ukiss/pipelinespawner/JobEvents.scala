@@ -1,7 +1,7 @@
 package com.sky.ukiss.pipelinespawner
 
 import com.sky.ukiss.pipelinespawner.api.{Active, Failed, JobChanged, JobCreated, JobData, JobDeleted, JobId, Succeeded, Unknown}
-import io.fabric8.kubernetes.api.model.Job
+import io.fabric8.kubernetes.api.model.{ContainerStateTerminated, Job, Pod}
 import io.fabric8.kubernetes.client.Watcher.Action._
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException, Watcher}
 import org.slf4j.LoggerFactory
@@ -30,7 +30,18 @@ class JobEvents(client: KubernetesClient,
 
   private def jobStatus(j: Job) = {
     val status = j.getStatus
-    if (status.getActive == 1) Active
+    val pod = client.pods().inNamespace(namespace).withLabel("job-name", j.getMetadata.getName).list().getItems.get(0)
+
+    println(pod)
+
+    val completed = pod.getStatus.getContainerStatuses.asScala
+      .filter(_.getName == "build")
+      .map(_.getState.getTerminated)
+      .filter(_ != null)
+      .find(_.getReason == "Completed")
+
+    if (completed.isDefined) Succeeded
+    else if (status.getActive == 1) Active
     else if (status.getFailed == 1) Failed
     else if (status.getSucceeded == 1) Succeeded
     else Unknown
@@ -54,7 +65,7 @@ class JobEvents(client: KubernetesClient,
       val jobData = convertToJobData(job)
 
       action match {
-        case ADDED|MODIFIED =>
+        case ADDED | MODIFIED =>
           currentJobs(jobData.id) = jobData
           val jobId: JobId = jobData.id
           if (action == ADDED)
@@ -69,4 +80,24 @@ class JobEvents(client: KubernetesClient,
 
     }
   })
+
+  client.pods().inNamespace(namespace).watch(new Watcher[Pod] {
+    override def eventReceived(action: Watcher.Action, resource: Pod): Unit = {
+      if (resource.getMetadata.getLabels.get("app_name") == "pipeline-spawner") {
+        if (theBuildContainerIsTerminated(resource)) {
+          resource.getStatus.getContainerStatuses.asScala.foreach(status => status.getState.setTerminated(new ContainerStateTerminated())
+          )
+        }
+      }
+    }
+
+    override def onClose(cause: KubernetesClientException): Unit = ???
+  })
+
+
+  private def theBuildContainerIsTerminated(resource: Pod): Boolean = resource.getStatus.getContainerStatuses.asScala
+    .filter(_.getName == "build")
+    .filter(_.getState.getTerminated != null)
+    .toList.nonEmpty
+
 }
