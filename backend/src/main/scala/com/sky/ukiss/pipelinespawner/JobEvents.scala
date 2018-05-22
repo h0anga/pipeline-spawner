@@ -28,9 +28,12 @@ class JobEvents(client: KubernetesClient,
     )
   }
 
-  private def jobStatus(j: Job) = {
+  private def jobStatus(j: Job): api.JobStatus = {
     val status = j.getStatus
-    val pod = client.pods().inNamespace(namespace).withLabel("job-name", j.getMetadata.getName).list().getItems.get(0)
+    val potentialPod = client.pods().inNamespace(namespace).withLabel("job-name", j.getMetadata.getName).list().getItems
+    if (potentialPod.isEmpty) return Active
+
+    val pod = potentialPod.get(0)
 
     println(pod)
 
