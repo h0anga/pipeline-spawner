@@ -1,8 +1,7 @@
 package com.sky.ukiss.pipelinespawner
 
-import java.io.InputStream
-
 import io.fabric8.kubernetes.api.model.LabelSelector
+import io.fabric8.kubernetes.client.dsl.LogWatch
 import io.fabric8.kubernetes.client.{KubernetesClient, KubernetesClientException}
 
 import scala.collection.JavaConverters._
@@ -17,9 +16,8 @@ class LogProvider(client: KubernetesClient, namespace: String) {
     }
   }
 
-  def streamLogs(jobName: String): InputStream = {
-    val watch = getPodOfJob(jobName).inContainer("build").tailingLines(1).watchLog()
-    watch.getOutput
+  def streamLogs(jobName: String): LogWatch = {
+    getPodOfJob(jobName).inContainer("build").tailingLines(1).watchLog()
   }
 
   private def getPodName(jobName: String) = {

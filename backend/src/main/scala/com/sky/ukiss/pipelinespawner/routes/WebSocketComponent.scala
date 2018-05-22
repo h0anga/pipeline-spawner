@@ -2,8 +2,8 @@ package com.sky.ukiss.pipelinespawner.routes
 
 import java.io.{BufferedReader, InputStreamReader}
 
-import com.sky.ukiss.pipelinespawner.{JobEvents, LogProvider}
 import com.sky.ukiss.pipelinespawner.api.JobCreated
+import com.sky.ukiss.pipelinespawner.{JobEvents, LogProvider}
 import org.json4s.{DefaultFormats, Formats}
 import org.log4s
 import org.scalatra.atmosphere.{AtmosphereSupport, _}
@@ -11,6 +11,7 @@ import org.scalatra.json.{JValueResult, JacksonJsonSupport}
 import org.scalatra.scalate.ScalateSupport
 import org.scalatra.{Ok, ScalatraServlet, SessionSupport}
 
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class WebSocketComponent(jobEvents: JobEvents, logProvider: LogProvider) extends ScalatraServlet
@@ -44,21 +45,33 @@ class WebSocketComponent(jobEvents: JobEvents, logProvider: LogProvider) extends
     }
   }
 
+
   atmosphere("/logs/:jobId") {
     new AtmosphereClient {
+      val connections: mutable.Map[String, Sender] = mutable.Map()
 
-      def sendLogsOfJob(jobId: String): Unit = new Thread{
-        override def run(): Unit = {
-          send(TextMessage(logProvider.podLogs(jobId)))
-          new BufferedReader(new InputStreamReader(logProvider.streamLogs(jobId))).lines().forEach(line => {
-            println("*** sending " + line)
-            send(TextMessage(line))
-          })
+      class Sender(jobId: String) {
+
+        private val watch = logProvider.streamLogs(jobId)
+        private val thread = new Thread {
+          override def run(): Unit = {
+            send(TextMessage(logProvider.podLogs(jobId)))
+            new BufferedReader(new InputStreamReader(watch.getOutput)).lines().forEach(line => {
+              send(TextMessage(line))
+            })
+          }
         }
-      }.start()
+
+        thread.start()
+
+        def stop(): Unit = {
+          watch.close()
+        }
+      }
 
       override def receive: AtmoReceive = {
-        case TextMessage(_) =>   sendLogsOfJob(params("jobId"))
+        case TextMessage(_) => connections(uuid) = new Sender(params("jobId"))
+        case Disconnected(_, _) => connections.remove(uuid).foreach(_.stop())
         case _ =>
       }
     }
