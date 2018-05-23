@@ -1,5 +1,7 @@
 import sbt.Keys.scalaVersion
 
+val applicationName = "pipeline-spawner"
+
 resolvers += Classpaths.typesafeReleases
 
 val Specs2Version = "4.0.2"
@@ -34,7 +36,7 @@ lazy val commonJVM = common.jvm.settings(
 lazy val backend = project.settings(
   commonSettings,
   mainClass in assembly := Some("com.sky.ukiss.pipelinespawner.Server"),
-  assemblyJarName in assembly := s"pipeline-spawner-${version.value}.jar",
+  assemblyJarName in assembly := s"$applicationName-${version.value}.jar",
   unmanagedResourceDirectories in Compile += baseDirectory.value / ".." / "static",
   libraryDependencies ++= Seq(
     "org.scalatra" %% "scalatra" % ScalatraVersion,
@@ -59,11 +61,20 @@ lazy val backend = project.settings(
     "org.eclipse.jetty" % "jetty-continuation" % JettyVersion,
     "org.eclipse.jetty.websocket" % "websocket-server" % JettyVersion,
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "container;provided;test" artifacts Artifact("javax.servlet-api", "jar", "jar")
+  ),
+  dockerfile in docker := {
+    val jarName = s"$applicationName.jar"
+    new Dockerfile {
+      from("repo.sns.sky.com:8186/dost/jdk-base-image:8u171.1.20")
 
-  )
+      add(assembly.value, jarName)
+      expose(8080)
+      cmd("java", "-Xmx1g", "-XX:MaxMetaspaceSize=256m", "-jar", jarName)
+    }
+  },
+  imageNames in docker := Seq(ImageName(s"repo.sns.sky.com:8185/ukiss/pipeline-spawner:${version.value}"))
 ).dependsOn(commonJVM)
-  .enablePlugins(SbtTwirl)
-  .enablePlugins(ScalatraPlugin)
+  .enablePlugins(SbtTwirl, ScalatraPlugin, DockerPlugin)
 
 lazy val frontend = project
   .settings(
