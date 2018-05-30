@@ -11,7 +11,8 @@ import scala.collection.mutable
 
 class JobEvents(client: KubernetesClient,
                 namespace: String,
-                broadcaster: JobEventBroadcaster
+                broadcaster: JobEventBroadcaster,
+                myName: String
                ) {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private val currentJobs: mutable.Map[JobId, JobData] = mutable.Map()
@@ -50,11 +51,14 @@ class JobEvents(client: KubernetesClient,
     else Unknown
   }
 
+  private def isMyJob(job: Job): Boolean = job.getMetadata.getLabels.get("app_name") == myName
+
   logger.info("Getting initial jobs")
 
   currentJobs ++= client.extensions().jobs()
     .inNamespace(namespace)
     .list().getItems.asScala
+    .filter(isMyJob)
     .map(convertToJobData)
     .map(data => (data.id, data))
     .toMap
@@ -65,6 +69,8 @@ class JobEvents(client: KubernetesClient,
     override def onClose(cause: KubernetesClientException): Unit = ???
 
     override def eventReceived(action: Watcher.Action, job: Job): Unit = {
+      if (!isMyJob(job)) return
+
       val jobData = convertToJobData(job)
 
       action match {
@@ -80,13 +86,12 @@ class JobEvents(client: KubernetesClient,
           broadcaster.broadcast(JobDeleted(jobData.id))
         case ERROR => logger.error("error about job events", job)
       }
-
     }
   })
 
   client.pods().inNamespace(namespace).watch(new Watcher[Pod] {
     override def eventReceived(action: Watcher.Action, resource: Pod): Unit = {
-      if (action == Watcher.Action.MODIFIED && resource.getMetadata.getLabels.get("app_name") == "pipeline-spawner") {
+      if (action == Watcher.Action.MODIFIED && resource.getMetadata.getLabels.get("app_name") == myName) {
         if (theBuildContainerIsTerminated(resource)) {
           resource.getStatus.getContainerStatuses.asScala.foreach(status => {
             val job = client.extensions().jobs().inNamespace(namespace).withName(resource.getMetadata.getLabels.get("job-name"))

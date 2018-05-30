@@ -22,7 +22,7 @@ class ConvertGitHookToJobTest extends Specification with MockitoSugar {
   when(clock.instant()) thenReturn now
 
   "The Converter" >> {
-    lazy val converter = new ConvertGitHookToJob(() => "id", clock, new DefaultKubernetesClient())
+    lazy val converter = new ConvertGitHookToJob(() => "id", clock, new DefaultKubernetesClient(), "a strange name")
 
     "The payload can be parsed from JSON" >> {
       hook.project.get.homepage must_== "http://example.com/mike/diaspora"
@@ -50,6 +50,10 @@ class ConvertGitHookToJobTest extends Specification with MockitoSugar {
 
         "has the GO_PIPELINE_LABEL variables injected" >> {
           envVars("GO_PIPELINE_LABEL") must_== "19700101000000"
+        }
+
+        "has the given application name" >> {
+          conversion.getMetadata.getLabels.get("app_name") must_== "a strange name"
         }
       }
     }

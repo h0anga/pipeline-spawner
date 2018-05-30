@@ -10,12 +10,12 @@ import io.fabric8.kubernetes.client.KubernetesClient
 
 class ConvertGitHookToJob(generateId: () => String,
                           clock: Clock,
-                          kubernetesClient: KubernetesClient) extends (GithubPayload => Job) {
+                          kubernetesClient: KubernetesClient,
+                          myName: String) extends (GithubPayload => Job) {
 
   private val repo = "repo.sns.sky.com:8186"
   private val version = "1.0.13"
   private val buildImage = s"$repo/dost/pipeline-build:$version"
-  private val myName = "pipeline-spawner"
 
   override def apply(hook: GithubPayload): Job = {
     val id = generateId()

@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import scala.util.Random
 
 class Context(config: Config) {
+  lazy val appName = "pipeline-spawner"
   lazy val namespace: String = config.getString("pipeline-spawner.namespace")
   lazy val kubernetesService = new KubernetesService(kubernetesClient, namespace, gitHookPayloadToJobConverter)
   lazy val kubernetesClient = new DefaultKubernetesClient()
@@ -18,11 +19,12 @@ class Context(config: Config) {
   lazy val gitHookPayloadToJobConverter = new ConvertGitHookToJob(
     generateRandomId,
     Clock.systemUTC(),
-    kubernetesClient
+    kubernetesClient,
+    appName
   )
   lazy val gitHookServiceComponent = new GitHookServiceComponent(kubernetesService)
   lazy val atmosphereJobEventBroadcaster = new AtmosphereJobEventBroadcaster
-  lazy val jobEvents = new JobEvents(kubernetesClient, namespace, atmosphereJobEventBroadcaster)
+  lazy val jobEvents = new JobEvents(kubernetesClient, namespace, atmosphereJobEventBroadcaster, appName)
   lazy val webSocketComponent = new WebSocketComponent(jobEvents, logProvider)
   lazy val frontendRoute = new FrontendRoute()
 
