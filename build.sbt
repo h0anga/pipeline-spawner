@@ -15,7 +15,6 @@ val JettyVersion = "9.2.22.v20170606"
 val PrickleVersion = "1.1.14"
 
 lazy val commonSettings = Seq(
-  version := "0.0.1-SNAPSHOT",
   organization := "com.sky.ukiss",
   scalaVersion := "2.12.4",
   test in assembly := {},
