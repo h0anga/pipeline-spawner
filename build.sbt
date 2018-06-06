@@ -17,7 +17,7 @@ val PrickleVersion = "1.1.14"
 lazy val commonSettings = Seq(
   organization := "com.sky.ukiss",
   scalaVersion := "2.12.4",
-  test in assembly := {},
+  assembly/test := {},
 )
 
 lazy val common = crossProject.crossType(CrossType.Pure)
@@ -34,9 +34,9 @@ lazy val commonJVM = common.jvm.settings(
 
 lazy val backend = project.settings(
   commonSettings,
-  mainClass in assembly := Some("com.sky.ukiss.pipelinespawner.Server"),
-  assemblyJarName in assembly := s"$applicationName-${version.value}.jar",
-  unmanagedResourceDirectories in Compile += baseDirectory.value / ".." / "static",
+  assembly/mainClass := Some("com.sky.ukiss.pipelinespawner.Server"),
+  assembly/assemblyJarName := s"$applicationName-${version.value}.jar",
+  Compile/unmanagedResourceDirectories += baseDirectory.value / ".." / "static",
   libraryDependencies ++= Seq(
     "org.scalatra" %% "scalatra" % ScalatraVersion,
     "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
@@ -61,7 +61,7 @@ lazy val backend = project.settings(
     "org.eclipse.jetty.websocket" % "websocket-server" % JettyVersion,
     "javax.servlet" % "javax.servlet-api" % "3.1.0" % "container;provided;test" artifacts Artifact("javax.servlet-api", "jar", "jar")
   ),
-  dockerfile in docker := {
+  docker/dockerfile := {
     val jarName = s"$applicationName.jar"
     new Dockerfile {
       from("repo.sns.sky.com:8186/dost/jdk-base-image:8u171.1.20")
@@ -71,7 +71,7 @@ lazy val backend = project.settings(
       cmd("java", "-Xmx1g", "-XX:MaxMetaspaceSize=256m", "-jar", jarName)
     }
   },
-  imageNames in docker := Seq(ImageName(s"repo.sns.sky.com:8185/ukiss/pipeline-spawner:${version.value}"))
+  docker / imageNames := Seq(ImageName(s"repo.sns.sky.com:8185/ukiss/pipeline-spawner:${version.value}"))
 ).dependsOn(commonJVM)
   .enablePlugins(SbtTwirl, ScalatraPlugin, DockerPlugin)
 
@@ -80,7 +80,7 @@ lazy val frontend = project
     commonSettings,
     scalaJSUseMainModuleInitializer := true,
     Seq(fullOptJS, fastOptJS, packageJSDependencies, packageMinifiedJSDependencies)
-      .map(task => crossTarget in(Compile, task) := file("static/content/target")),
+      .map(Compile/_/crossTarget := file("static/content/target")),
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % "0.9.5",
       "com.github.japgolly.scalajs-react" %%% "core" % scalaJSReactVersion,
@@ -92,7 +92,7 @@ lazy val frontend = project
       "org.webjars.npm" % "react" % reactJSVersion / "react-with-addons.js" commonJSName "React" minified "react-with-addons.min.js",
       "org.webjars.npm" % "react-dom" % reactJSVersion / "react-dom.js" commonJSName "ReactDOM" minified "react-dom.min.js" dependsOn "react-with-addons.js"
     ),
-    skip in packageJSDependencies := false
+    packageJSDependencies/skip := false
   )
   .dependsOn(commonJS)
   .enablePlugins(ScalaJSPlugin)

@@ -27,7 +27,7 @@ IMAGE = $(DOCKER_REGISTRY_URL)/$(APP_NAME)
 NAMESPACE=mobile
 
 FRONTEND=$(BUILD_DIR)/static/content/target/frontend-fastopt.js
-SET_VERSION='set version in ThisBuild := "$(VERSION)"'
+SET_VERSION='set ThisBuild/version := "$(VERSION)"'
 
 all: build
 
