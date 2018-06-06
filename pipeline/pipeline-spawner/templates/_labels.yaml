@@ -1,0 +1,9 @@
+{{- define "labels"}}
+  name: {{ .Chart.Name }}
+  namespace: mobile
+  app_name: {{ .Chart.Name }}
+  app_version: {{ .Chart.Version | quote }}
+  environment: {{ .Values.cluster.environment }}
+  location: {{ .Values.cluster.location }}
+  dev_team_responsible: moominscalars
+{{- end}}

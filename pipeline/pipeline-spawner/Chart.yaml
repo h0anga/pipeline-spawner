@@ -1,0 +1,9 @@
+name: pipeline-spawner
+version: 1.0.0
+description: The stateless build-server
+sources:
+  - https://git.sns.sky.com/alberto.colombo/pipeline-spawner
+home: https://git.sns.sky.com/alberto.colombo/pipeline-spawner/tree/master
+maintainers:
+  - name: Team Moominscalars
+    email: oksana.kadiuk@sky.uk
