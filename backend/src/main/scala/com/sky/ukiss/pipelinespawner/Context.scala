@@ -2,7 +2,8 @@ package com.sky.ukiss.pipelinespawner
 
 import java.time.Clock
 
-import com.sky.ukiss.pipelinespawner.routes.{FrontendRoute, GitHookServiceComponent, LogRoute, WebSocketComponent}
+import com.sky.ukiss.pipelinespawner.routes._
+import com.sky.ukiss.pipelinespawner.status.AppStatus
 import com.typesafe.config.Config
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 
@@ -27,5 +28,6 @@ class Context(config: Config) {
   lazy val jobEvents = new JobEvents(kubernetesClient, namespace, atmosphereJobEventBroadcaster, appName)
   lazy val webSocketComponent = new WebSocketComponent(jobEvents, logProvider)
   lazy val frontendRoute = new FrontendRoute()
-
+  lazy val appStatus = new AppStatus("unknown version", jobEvents, "unknown url")
+  lazy val statusRoute = new StatusRoute(appStatus)
 }
