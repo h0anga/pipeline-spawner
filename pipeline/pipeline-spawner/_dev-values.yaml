@@ -1,0 +1,12 @@
+cluster:
+  environment: dev
+  location: local
+kubernetes:
+  repo:
+    host: repo.sns.sky.com
+    port: 8185
+  limits:
+    memory: "1G"
+properties:
+  app:
+    port: 8080

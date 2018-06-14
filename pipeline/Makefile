@@ -27,6 +27,7 @@ NAMESPACE=mobile
 
 FRONTEND=$(BUILD_DIR)/static/content/target/frontend-fastopt.js
 SET_VERSION='set ThisBuild/version := "$(VERSION)"'
+CHART_NAME=$(APP_NAME)-(VERSION).tgz
 
 all: build
 
@@ -50,10 +51,12 @@ decrypt-secrets:
 	$(call decrypt_secrets,$(APP_NAME)/_$(CLUSTER)-values-secrets.enc.yaml,$(APP_NAME)/_$(CLUSTER)-values-secrets.dec.yaml)
 	ls -l $(APP_NAME)/_$(CLUSTER)-values-secrets.dec.yaml
 
-helm-upgrade:
-	helm upgrade --install --namespace $(NAMESPACE) --wait --timeout=300 $(APP_NAME) ./$(APP_NAME)-${VERSION}.tgz --values $(APP_NAME)/_$(TARGET_ENV)-values.yaml -f $(APP_NAME)/_$(CLUSTER)-values-secrets.dec.yaml
+helm-upgrade: package-chart
+	helm upgrade --install --debug --namespace $(NAMESPACE) --wait --timeout=300 $(APP_NAME) ./$(APP_NAME)-${VERSION}.tgz --values $(APP_NAME)/values.yaml --values $(APP_NAME)/_$(TARGET_ENV)-values.yaml
 
-package-chart:
+package-chart: $(CHART_NAME)
+
+$(CHART_NAME): pipeline-spawner/*.yaml pipeline-spawner/templates/*.yaml
 	helm package --save=false --version $(VERSION) -d ./ $(APP_NAME)
 
 helm-list:

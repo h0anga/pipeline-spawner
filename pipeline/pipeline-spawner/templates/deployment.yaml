@@ -1,7 +1,9 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  #{{- include "labels" . | indent 4 }}
+  name: {{ .Chart.Name }}
+  namespace: mobile
+{{- include "labels" . }}
 spec:
   revisionHistoryLimit: 10
   replicas: 1
@@ -15,7 +17,7 @@ spec:
       app_name: {{ .Chart.Name }}
   template:
     metadata:
-      #{{- include "labels" . | indent 4 }}
+    {{- include "labels" . | indent 4 }}
     spec:
       containers:
       - name: pipeline-spawner
@@ -27,42 +29,21 @@ spec:
           capabilities:
             add:
             - SYS_PTRACE
-        env:
-        - name: LOG_IDENTIFIER
-          value: {{ .Values._logIdentifier }}
-        - name: APPLICATION_VERSION
-          value: {{ .Chart.Version | quote }}
-        - name: APPLICATION_PROPERTIES_VERSION
-          value: {{ .Values._configVersion | quote }}
-        volumeMounts:
-          - name: config-volume
-            mountPath: /app/config/
-          - name: secret-volume
-            mountPath: /app/secrets/
-          - name: npr-volume
-            mountPath: {{ .Values.properties.app.file.directory }}
         ports:
         - containerPort: {{ .Values.properties.app.port }}
         livenessProbe:
           httpGet:
-            path: /ready
+            path: /static/content/index.html
             port: {{ .Values.properties.app.port }}
           initialDelaySeconds: 180
           timeoutSeconds: 15
         readinessProbe:
           httpGet:
-            path: /ready
+            path: /static/content/index.html
             port: {{ .Values.properties.app.port }}
           initialDelaySeconds: 10
           failureThreshold: 1
           timeoutSeconds: 15
-      volumes:
-        - name: config-volume
-          configMap:
-            name: {{ .Chart.Name }}
-        - name: secret-volume
-          secret:
-            secretName: pipeline-spawner
       securityContext:
         runAsNonRoot: true
         runAsUser: 4659
